@@ -5,10 +5,10 @@ namespace VoxTanks.UI
     public class HullItem : SelectionMenuItem
     {
         [SerializeField] private int _id;
-        public override void OnClick()
+
+        public void OnClick()
         {
-            GameSetupMenu.SelectHull(_id);
-            base.OnClick();
+            GameSetupMenu.SelectHull(_id, this);
         }
     }
 }

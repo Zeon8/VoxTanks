@@ -4,7 +4,6 @@ using VoxTanks.Tank.Turrets;
 
 namespace VoxTanks.Supplies
 {
-    [System.Serializable]
     [CreateAssetMenuAttribute(menuName="Supplies/Damage")]
     public class DamageSupply : SupplyEffect
     {
@@ -12,19 +11,19 @@ namespace VoxTanks.Supplies
 
         private ITankTurret _tankTurret;
 
-        public override void StartUse(GameObject tank)
+        public override void StartUsing(GameObject tank)
         {
-            base.StartUse(tank);
+            base.StartUsing(tank);
             _tankTurret = tank.GetComponentInChildren<ITankTurret>();
             _tankTurret.AdditionalDamage = _damage;
         }
 
         public override void Update()
         {
-            TankUI.SetDamageProgressClientRpc(UseTime / MaxUseTime);
+            TankUI.SetDamageProgressClientRpc(Duration / MaxDuration);
         }
 
-        public override void EndUse()
+        public override void FinishUsing()
         {
             _tankTurret.AdditionalDamage = 1;
             TankUI.SetDamageProgressClientRpc(0);

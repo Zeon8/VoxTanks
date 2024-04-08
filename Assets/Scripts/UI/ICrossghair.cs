@@ -7,6 +7,7 @@ namespace VoxTanks.UI
         bool Visible { get; set; }
 
         Vector3 Position { get; }
-        void SetPosition(Transform _muzzle);
+
+        void UpdatePosition(Transform _muzzle);
     }
 }

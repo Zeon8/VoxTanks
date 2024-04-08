@@ -1,3 +1,4 @@
+using Assets.Scripts.UI.Menu;
 using System.Reflection;
 using Unity.Netcode;
 using UnityEngine;
@@ -7,21 +8,29 @@ using VoxTanks.GameModes;
 
 namespace VoxTanks.UI.Menu
 {
-    public class BaseRoomMenu : MonoBehaviour
+    public abstract class BaseRoomMenu : MonoBehaviour
     {
+        protected NetworkManager NetworkManager { get; private set; }
+
+        protected string SelectedMap { get; private set; }
+
+        protected GameModeItem SelectedGamemode { get; private set; }
+
         [SerializeField] private Image[] _mapImages;
         [SerializeField] private Image[] _gamemodeImages;
 
         [SerializeField] private Color _selectedItemColor;
         [SerializeField] private Color _defaultItemColor;
-        
-        protected NetworkManager _networkManager;
-        protected string _selectedMap;
-        protected GameModeItem _selectedGamemode;
 
+        [SerializeField] private MapItem _defaultMap;
+        [SerializeField] private GameModeItem _defaultGameMode;
+        
         protected virtual void Start()
         {
-            _networkManager = NetworkManager.Singleton;
+            NetworkManager = NetworkManager.Singleton;
+
+            OnSelectedMap(_defaultMap);
+            OnSelectedGameMode(_defaultGameMode);
         }
 
         public void DeselectItems(Image[] items)
@@ -32,17 +41,17 @@ namespace VoxTanks.UI.Menu
             }
         }
 
-        public void OnSelectedMap(Image mapImage)
+        public void OnSelectedMap(MapItem mapItem)
         {
             // Get map name by image object name
-            _selectedMap = mapImage.name;
-            Select(mapImage,_mapImages);
+            SelectedMap = mapItem.MapName;
+            Select(mapItem.Image, _mapImages);
         }
 
         public void OnSelectedGameMode(GameModeItem gameModeItem)
         {
             // Get gamemode id by image object name
-            _selectedGamemode =  gameModeItem;
+            SelectedGamemode =  gameModeItem;
             Select(gameModeItem.Image, _gamemodeImages);
         }
 

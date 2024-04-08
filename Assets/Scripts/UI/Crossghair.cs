@@ -21,7 +21,7 @@ namespace VoxTanks.UI
             _image = GetComponent<Image>();
         }
 
-        public void SetPosition(Transform _muzzle)
+        public void UpdatePosition(Transform _muzzle)
         {
             bool hitted = Physics.Raycast(_muzzle.position, _muzzle.forward, out RaycastHit hit);
             Visible = hitted;

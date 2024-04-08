@@ -10,19 +10,14 @@ namespace VoxTanks.UI
         [SerializeField] private TMP_Text _redTeamText;
         [SerializeField] private TMP_Text _blueTeamText;
 
-        public int RedTeamScore
+        public void SetRedTeamScore(int score)
         {
-            set => _redTeamText.text = value.ToString();
+            _redTeamText.text = score.ToString();
         }
 
-        public int BlueTeamScore
+        public void SetBlueTeamScore(int score)
         {
-            set => _blueTeamText.text = value.ToString();
-        }
-
-        private void Start()
-        {
-            Debug.Log(NetworkManager.Singleton.GetComponent<TeamsGameMode>());
+            _blueTeamText.text = score.ToString();
         }
 
     }

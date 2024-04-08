@@ -1,26 +1,33 @@
+using System;
 using Unity.Netcode;
 using UnityEngine;
+using VoxTanks.Game;
 using VoxTanks.Tank.Spawners;
 
 namespace VoxTanks.Tank
 {
     public class TankLife : NetworkBehaviour
     {
+        public event Action Respawned;
+
         [SerializeField] private Behaviour[] controlComponents;
         [SerializeField] private GameObject[] tankParts;
         [SerializeField] private Rigidbody _rigidbody;
 
         private ITankRespawner _tankRespawner;
-
         private TankTeam _tankTeam;
 
-        public void Setup(ITankRespawner tankRespawner, TankTeam tankTeam)
+        public void ApplySettings(TankSettings settings)
         {
-            _tankTeam = tankTeam;
-            _tankRespawner = tankRespawner;
+            _tankTeam = settings.Team;
+            _tankRespawner = FindAnyObjectByType<GameSetup>().CurrentGameMode.Respawner;
         }
-        
-        public void RespawnTank() =>  _tankRespawner?.RespawnTank(transform,_tankTeam);
+
+        public void Respawn()
+        {
+            _tankRespawner.RespawnTank(transform, _tankTeam);
+            Respawned?.Invoke();
+        }
 
         [ClientRpc]
         public void SetControllableClientRpc(bool value)
@@ -38,8 +45,11 @@ namespace VoxTanks.Tank
             _rigidbody.isKinematic = !value;
             foreach (var part in tankParts)
             {
-                part?.SetActive(value);
+                if(part != null)
+                    part.SetActive(value);
             }
         }
+
+        
     }
 }

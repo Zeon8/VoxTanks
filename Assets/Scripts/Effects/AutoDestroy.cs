@@ -24,7 +24,7 @@ namespace VoxTanks.Effects
         {
             yield return new WaitForSeconds(_waitTime);
             OnDestroyed?.Invoke();
-            NetworkObject?.Despawn(true);
+            NetworkObject.Despawn(true);
 
         }
 

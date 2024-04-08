@@ -2,6 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 using VoxTanks.Effects;
 using VoxTanks.GameModes;
+using VoxTanks.Game;
 using VoxTanks.Tank.Spawners;
 using VoxTanks.UI;
 
@@ -14,50 +15,38 @@ namespace VoxTanks.Tank
         public bool HasFullHealth => _health.Value == _maxHealth;
 
         [SerializeField] private NetworkVariable<float> _health = new NetworkVariable<float>(100f);
-
         [SerializeField] private float _maxHealth = 100f;
-
         [SerializeField] private NetworkObject _destroyTankEffect;
-
-        private float effectDelay;
-
-        [EditorButton(nameof(DestroyTank), "Destroy")]
-        [EditorButton(nameof(DestroyTank), "Update Health Info")]
-        
         [SerializeField] private TankUI _tankUI;
 
         private IStatusBar _statusUI;
-
         private KillTab _killTab;
         private TeamDeathmatchGameMode  _teamsDeathmatchMode;
         private TankSetup _tankSetup;
-
         private TankFlagCatcher _tankFlagCatcher;
-
         private TankSound _tankSound;
         private TankLife _tankLife;
 
 
         private void Start()
         {
-            var autoDestroy = _destroyTankEffect.GetComponent<AutoDestroy>();
-            effectDelay = autoDestroy.Duration;
-
             _health.Value = _maxHealth;
             _health.OnValueChanged += HealthChanged;
-            _statusUI = GameObject.FindObjectOfType<StatusBar>();
+            _statusUI = FindObjectOfType<StatusBar>();
             _tankSetup = GetComponent<TankSetup>();
             _tankLife = GetComponent<TankLife>();
             _killTab = FindObjectOfType<KillTab>();
-            _teamsDeathmatchMode = NetworkManager.GetComponent<TeamDeathmatchGameMode>();
-            _tankFlagCatcher = GetComponent<TankFlagCatcher>();
             _tankSound = GetComponent<TankSound>();
+            _tankFlagCatcher = GetComponent<TankFlagCatcher>();
+
+            if(FindObjectOfType<GameSetup>().CurrentGameMode is TeamDeathmatchGameMode gameMode)
+                _teamsDeathmatchMode = gameMode;
         }
 
         public void HealthChanged(float oldValue, float newValue)
         {
             if (IsLocalPlayer)
-                _statusUI.Health = _health.Value / _maxHealth;
+                _statusUI.SetHealthProgress(_health.Value / _maxHealth);
         }
 
         public void Heal(float health)
@@ -67,16 +56,23 @@ namespace VoxTanks.Tank
                 _health.Value = _maxHealth;
         }
 
+        public void SetTankHealth(float health)
+        {
+            _maxHealth = health;
+            _health.Value = health;
+        }
 
-        public void TakeDamage(float damage,string attacker,TankTeam attackerTeam)
+
+        public void TakeDamage(float damage, string attacker, TankTeam attackerTeam)
         {
             if(attackerTeam != TankTeam.None && attackerTeam == _tankSetup.Team)
                 return;
 
-            Debug.Log("Tank Health was: " + _health.Value);
-            Debug.Log("Damaged with armor: " + (damage / Armor));
+            Debug.Log("Tank health was: " + _health.Value);
+            Debug.Log("Damage with armor: " + (damage / Armor));
             _health.Value -= damage / Armor;
             Debug.Log("Tank health become: " + _health.Value);
+
             if (_health.Value <= 0)
             {
                 _health.Value = _maxHealth;
@@ -87,21 +83,22 @@ namespace VoxTanks.Tank
 
         private void UpdateGameInfo(string attacker, TankTeam tankTeam)
         {
-            _killTab.AddKillClientRpc(attacker, _tankSetup.Playername);
-            if (tankTeam != TankTeam.None)
-                _teamsDeathmatchMode?.AddTeamScore(tankTeam);
+            string victim = _tankSetup.Playername;
+            _killTab.AddKillClientRpc(attacker, victim);
+            if (_teamsDeathmatchMode != null)
+                _teamsDeathmatchMode.AddTeamScore(tankTeam);
         }
 
-#if UNITY_EDITOR
         [ContextMenu("Destroy tank")]
         private void DestroyTank()
         {
             SetTankEnabled(false);
-            _tankSound.PlayTankExplodeServerRpc();
+            _tankSound.PlayTankExplodeClientRpc();
             SpawnEffect();
-            _tankFlagCatcher?.LostFlag();
+
+            if(_tankFlagCatcher != null)
+                _tankFlagCatcher.DropFlag();
         }
-#endif
 
         private void SetTankEnabled(bool state)
         {
@@ -120,7 +117,7 @@ namespace VoxTanks.Tank
         private void RespawnTank()
         {
             SetTankEnabled(true);
-            _tankLife.RespawnTank();
+            _tankLife.Respawn();
         }
     }
 }

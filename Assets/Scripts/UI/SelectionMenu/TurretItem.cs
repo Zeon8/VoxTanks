@@ -9,10 +9,9 @@ namespace VoxTanks.UI
     {
         [SerializeField] private int _id;
 
-        public override void OnClick()
+        public void OnClick()
         {
-            GameSetupMenu.SelectTurret(_id);
-            base.OnClick();
+            GameSetupMenu.SelectTurret(_id, this);
         }
     }
 }

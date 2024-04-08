@@ -10,13 +10,10 @@ namespace VoxTanks.UI.Supply
 
         [SerializeField] private Image _image;
 
-        public virtual float Progress
+        public void SetProgress(float value)
         {
-            set
-            {
-                gameObject.SetActive(value > 0);
-                Image.fillAmount = 1 - value;
-            }
+            gameObject.SetActive(value > 0);
+            Image.fillAmount = 1 - value;
         }
     }
 }

@@ -7,31 +7,34 @@ namespace VoxTanks.Tank.Turrets {
     {
         [SerializeField] private float _speed;
 
-        private NetworkVariable<float> _damage = new NetworkVariable<float>();
-
+        private float _damage;
         private string _playerName;
         private TankTeam _tankTeam;
 
-        public void Setup(float damage,string playaerName, TankTeam tankTeam) 
+        public void Setup(float damage, string playerName, TankTeam tankTeam)
         {
-            _damage.Value = damage;
-            _playerName = playaerName;
+            _damage = damage;
+            _playerName = playerName;
             _tankTeam = tankTeam;
         } 
 
         private void Update()
         {
-            transform.position += transform.forward * _speed * Time.deltaTime;
+            transform.position += _speed * Time.deltaTime * transform.forward;
         }
 
         private void OnTriggerEnter(Collider other)
         {
             if(!IsServer)
                 return;
-            Transform root = other.transform.root;
-            root?.GetComponent<TankHealth>()?.TakeDamage(_damage.Value,_playerName,_tankTeam);
-            NetworkObject?.Despawn(true);
 
+            Debug.Log("Hitted: "+other.gameObject);
+
+            var tankHealth = other.transform.GetComponentInParent<TankHealth>();
+            if (tankHealth != null)
+                tankHealth.TakeDamage(_damage, _playerName, _tankTeam);
+
+            NetworkObject.Despawn(true);
         }
     }
 }

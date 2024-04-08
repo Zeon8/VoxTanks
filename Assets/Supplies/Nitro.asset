@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 909808b146809a64797a5b1623bce1df, type: 3}
   m_Name: Nitro
   m_EditorClassIdentifier: 
-  UseTime: 0
+  _useTime: 0
   _maxUseTime: 20
-  _nitro: 2
+  _nitro: 1.5

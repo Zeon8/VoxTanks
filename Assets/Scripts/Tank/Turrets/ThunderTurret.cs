@@ -6,21 +6,17 @@ namespace VoxTanks.Tank.Turrets
     public class ThunderTurret : SmokiTurret
     {
         [SerializeField] private float _radius;
-        private bool _display = false;
-        private Vector3 _position;
 
-        protected override void ProcessShoot(Ray ray)
+        protected override void HandleShot(RaycastHit hit)
         {
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            foreach (Collider collider in Physics.OverlapSphere(hit.point, _radius))
             {
-                foreach (Collider collider in Physics.OverlapSphere(hit.point, _radius))
+                Debug.DrawLine(hit.point, collider.transform.position);
+                if (collider.transform.root != transform.root)
                 {
-                    Debug.DrawLine(hit.point, collider.transform.position);
-                    if(collider.transform.root != transform.root)
-                    {
-                        var health = collider.GetComponentInParent<TankHealth>();
-                        health?.TakeDamage(_damage * AdditionalDamage,TankSetup.Playername,TankSetup.Team);
-                    }
+                    var health = collider.GetComponentInParent<TankHealth>();
+                    if(health != null)
+                        health.TakeDamage(Damage, TankSetup.Playername, TankSetup.Team);
                 }
             }
         }

@@ -7,8 +7,8 @@ namespace VoxTanks.Tank.Turrets
 {
     public abstract class TankTurret : NetworkBehaviour, ITankTurret
     {
-        private float _additionalDamage = 1;
-        public float AdditionalDamage { 
+        public float AdditionalDamage 
+        { 
             get => _additionalDamage; 
             set 
             {
@@ -18,31 +18,23 @@ namespace VoxTanks.Tank.Turrets
             }
         }
 
-        [SerializeField] private TankSound _tankSound;
+        protected float Damage => _damage * _additionalDamage;
+        protected Crossghair Crosshair => _crossghair;
+        protected LayerMask LayerMask => _layermask;
+        protected float Distance => _distance;
+        protected TankSetup TankSetup { get; private set; }
 
         [Header("Settings")]
         [SerializeField] private float _distance;
+        [SerializeField] private TankSound _tankSound;
         [SerializeField] private LayerMask _layermask;
-
         [SerializeField] private float _reloadTime;
-
-        [SerializeField] protected float _damage;
-
+        [SerializeField] private float _damage;
         [SerializeField] private int _soundIndex;
 
-
-        protected float Damage => _damage;
-        protected Crossghair Crosshair => _crossghair;
-
-        protected LayerMask LayerMask => _layermask;
-        protected float Distance => _distance;
-        
-        protected TankSetup TankSetup { get; private set; }
-
         private TurretAnimator _animator;
-
+        private float _additionalDamage = 1;
         private float _currentTime;
-        private Transform _camera;
         private Crossghair _crossghair;
         private IStatusBar _statusBar;
 
@@ -54,7 +46,6 @@ namespace VoxTanks.Tank.Turrets
 
         private void OnEnable()
         {
-            _camera = Camera.main.transform;
             _statusBar = FindObjectOfType<StatusBar>();
             _crossghair = FindObjectOfType<Crossghair>();
             _animator = GetComponent<TurretAnimator>();
@@ -72,9 +63,7 @@ namespace VoxTanks.Tank.Turrets
                 FireServerRpc(ray);
             }
 
-
-            if(_statusBar is not null)
-                _statusBar.Reload = _currentTime / _reloadTime;
+            _statusBar?.SetReloadProgress(_currentTime / _reloadTime);
         }
 
         private void FixedUpdate()
@@ -86,14 +75,14 @@ namespace VoxTanks.Tank.Turrets
         [ServerRpc]
         private void FireServerRpc(Ray ray)
         {
-            Debug.Log($"Received: {ray}");
             if (_currentTime >= _reloadTime)
             {
-                _animator?.PlayShootAnimationClientRpc();
+                if (_animator != null)
+                    _animator.PlayShootAnimationClientRpc();
+
                 _tankSound.PlayShotClientRpc(_soundIndex);
                 _currentTime = 0;
                 Shoot(ray);
-                Debug.Log($"Shooted: {ray}");
             }
         }
 

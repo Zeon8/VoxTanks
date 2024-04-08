@@ -3,7 +3,6 @@ namespace VoxTanks.Supplies
     using UnityEngine;
     using VoxTanks.Tank;
 
-    [System.Serializable]
     [CreateAssetMenuAttribute(menuName="Supplies/Medkit")]
     public class MedkitSupply : SupplyEffect
     {
@@ -11,15 +10,15 @@ namespace VoxTanks.Supplies
         [SerializeField] private float _healSpeed = 1f;
         private TankHealth _tankHealth;
 
-        public override bool CanStartUse(GameObject tank)
+        public override bool CanBeginUse(GameObject tank)
         {
             var tankHealth = tank.GetComponent<TankHealth>();
             return !tankHealth.HasFullHealth;
         }
 
-        public override void StartUse(GameObject tank)
+        public override void StartUsing(GameObject tank)
         {
-            base.StartUse(tank);
+            base.StartUsing(tank);
             var tankHealth = tank.GetComponent<TankHealth>();
             _tankHealth = tankHealth;
         }
@@ -29,15 +28,15 @@ namespace VoxTanks.Supplies
         {
             _tankHealth.Heal(Time.fixedDeltaTime * _healSpeed);
 
-            TankUI.SetMedkitProgressClientRpc(UseTime / MaxUseTime);
+            TankUI.SetMedkitProgressClientRpc(Duration / MaxDuration);
 
             if (_tankHealth.HasFullHealth)
             {
-                UseTime = MaxUseTime;
+                Duration = MaxDuration;
             }
         }
 
-        public override void EndUse()
+        public override void FinishUsing()
         {
             TankUI.SetMedkitProgressClientRpc(0);
         }

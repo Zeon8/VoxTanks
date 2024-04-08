@@ -10,17 +10,16 @@ namespace VoxTanks.Tank.Spawners
 
         public void RespawnTank(Transform tank, TankTeam tankTeam)
         {
-            for (int i = 0; i < _tankSpawns.Length; i++)
+            TankSpawn spawnPoint;
+            do
             {
                 var spawnPointNumber = Random.Range(0, _tankSpawns.Length);
-                var spawnPoint = _tankSpawns[spawnPointNumber];
-                if (spawnPoint != null && !Physics.Raycast(spawnPoint.transform.position, Vector3.down, Mathf.Infinity, _layerMask))
-                {
-                    Transform spawnTransform = spawnPoint.transform;
-                    tank.SetPositionAndRotation(spawnTransform.position, spawnTransform.rotation);
-                    break;
-                }
+                spawnPoint = _tankSpawns[spawnPointNumber];
             }
+            while (spawnPoint == null || Physics.Raycast(spawnPoint.transform.position, Vector3.down, Mathf.Infinity, _layerMask));
+            
+            Transform spawnTransform = spawnPoint.transform;
+            tank.SetPositionAndRotation(spawnTransform.position, spawnTransform.rotation);
         }
 
     }

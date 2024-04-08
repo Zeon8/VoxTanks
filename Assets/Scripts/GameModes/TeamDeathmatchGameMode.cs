@@ -3,11 +3,12 @@ using VoxTanks.Tank;
 
 namespace VoxTanks.GameModes
 {
-    public class TeamDeathmatchGameMode : TeamsGameMode
+    [CreateAssetMenu(menuName = "Game modes/Team deathmatch")]
+    public class TeamDeathmatchGameMode : BaseTeamsGameMode
     {
         public void AddTeamScore(TankTeam team)
         {
-            InfoTab.AddTeamScore(team);
+            InfoTab.AddTeamScore(team, 1);
         }
     }
 }

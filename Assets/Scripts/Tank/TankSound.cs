@@ -13,11 +13,6 @@ namespace VoxTanks.Tank
         [SerializeField] private AudioClip _tankExplodeSound;
         [SerializeField] private AudioClip[] _shotSounds;
 
-#if UNITY_EDITOR
-        [ServerRpc(RequireOwnership=false)]
-        public void PlayTankExplodeServerRpc() => PlayTankExplodeClientRpc();
-#endif
-
         [ClientRpc]
         public void PlayMoveClientRpc()
         {

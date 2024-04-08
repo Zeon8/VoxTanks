@@ -1,14 +1,23 @@
-using System;
+﻿using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
+using VoxTanks.Tank;
 
 namespace VoxTanks.Tank
 {
-    public class TankSettings : MonoBehaviour
+    public struct TankSettings : INetworkSerializable
     {
+        public int Turret;
 
-        /// <summary>Returns Turret id</summary>
-        public event Action<int> OnTurretChanged;
+        public int Hull;
 
-        public void SetTurret(int turret) => OnTurretChanged?.Invoke(turret);
+        public TankTeam Team;
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref Turret);
+            serializer.SerializeValue(ref Hull);
+            serializer.SerializeValue(ref Team);
+        }
     }
 }

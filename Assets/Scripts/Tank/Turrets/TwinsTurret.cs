@@ -24,11 +24,11 @@ namespace VoxTanks.Tank.Turrets
         }
 
         [ServerRpc]
-        private void SpawnProjectileServerRpc(Vector3 position,Quaternion rotation)
+        private void SpawnProjectileServerRpc(Vector3 position, Quaternion rotation)
         {
-            TwinsProjectile projectile = Instantiate(_projectile,position,rotation);
+            TwinsProjectile projectile = Instantiate(_projectile, position, rotation);
             projectile.NetworkObject.Spawn();
-            projectile.Setup(Damage,TankSetup.Playername,TankSetup.Team);
+            projectile.Setup(Damage, TankSetup.Playername, TankSetup.Team);
         }
     }
 }

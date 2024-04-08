@@ -15,9 +15,9 @@ namespace VoxTanks.Supplies
         [SerializeField] private string _animationName;
         [SerializeField] private int _destroyAfter;
         [SerializeField] private Collider _collider;
+
         private Animator _animator;
         private Rigidbody _rigidBody;
-
         private bool _started;
         protected TankUI TankUI;
 
@@ -38,9 +38,9 @@ namespace VoxTanks.Supplies
 
         public void Destroy()
         {
-            _animator.Play(_animationName);
             _collider.enabled = false;
             _rigidBody.isKinematic = true;
+            _animator.Play(_animationName);
             StartCoroutine(DestroyAfter(_destroyAfter));
         }
 

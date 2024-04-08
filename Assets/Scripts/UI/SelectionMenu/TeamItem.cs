@@ -7,10 +7,9 @@ namespace VoxTanks.UI
     {
         [SerializeField] private TankTeam _tankTeam;
 
-        public override void OnClick()
+        public void OnClick()
         {
-            GameSetupMenu.SelectTeam(_tankTeam);
-            base.OnClick();
+            GameSetupMenu.SelectTeam(_tankTeam, this);
         }
     }
 }

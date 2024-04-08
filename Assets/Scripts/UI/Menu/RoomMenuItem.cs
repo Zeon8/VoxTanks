@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using VoxTanks.Game;
 
 namespace VoxTanks.UI.Menu
 {
@@ -12,12 +13,12 @@ namespace VoxTanks.UI.Menu
         [SerializeField] private TMP_Text _playersText;
         private Action _joinRoom;
 
-        public void Setup(string roomName,string map, string gamemode, int playersCount, byte maxPlayers, Action joinRoom)
+        public void Setup(GameInfo battle, Action joinRoom)
         {
-            _nameText.text = roomName;
-            _mapText.text = map;
-            _gamemodeText.text = gamemode;
-            _playersText.text = playersCount + "/" + maxPlayers;
+            _nameText.text = battle.Name;
+            _mapText.text = battle.Map ;
+            _gamemodeText.text = battle.GameMode;
+            _playersText.text = battle.PlayerCount + "/" + battle.MaxPlayerCount;
             _joinRoom = joinRoom;
         }
 

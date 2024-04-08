@@ -1,15 +1,16 @@
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
-using VoxTanks.Network;
+using VoxTanks.GameModes;
+using VoxTanks.Game;
 using VoxTanks.Tank;
 
 namespace VoxTanks.UI
 {
-    public class SelectionMenuItem : MonoBehaviour
+    public abstract class SelectionMenuItem : MonoBehaviour
     {
 
-        [SerializeField] IPlayerSetup _playerSetup;
+        [SerializeField] BaseGameMode _playerSetup;
 
         [SerializeField] Image _border;
 
@@ -22,14 +23,11 @@ namespace VoxTanks.UI
 
         private void Start()
         {
-            _playerSetup = NetworkManager.Singleton.GetComponent<IPlayerSetup>();
+            _playerSetup = FindObjectOfType<GameSetup>().CurrentGameMode;
         }
 
-        public virtual void OnClick() => _border.color = _selectedColor;
+        public void Select() => _border.color = _selectedColor;
 
-        public void Deselect()
-        {
-            _border.color = _defaultColor;
-        }
+        public void Deselect() => _border.color = _defaultColor;
     }
 }

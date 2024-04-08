@@ -1,13 +1,14 @@
 using Unity.Netcode;
 using UnityEngine;
 using VoxTanks.GameModes.FlagMode;
+using VoxTanks.Game;
 
 namespace VoxTanks.Tank
 {
     public class TankFlagCatcher : NetworkBehaviour
     {
         private TankSetup _tankSetup;
-        private TeamFlagsMode _flagMode;
+        private CatchFlagMode _flagMode;
         [SerializeField] private Transform _flagPosition;
         [SerializeField] private float _lostDistance;
 
@@ -15,15 +16,18 @@ namespace VoxTanks.Tank
 
         private void Start()
         {
+            if (FindObjectOfType<GameSetup>().CurrentGameMode is not CatchFlagMode mode)
+                return;
+
+            _flagMode = mode;
             _tankSetup = GetComponent<TankSetup>();
-            _flagMode = NetworkManager.Singleton.GetComponent<TeamFlagsMode>();
         }
 
         private void Update()
         {
             if(Input.GetKeyDown(KeyCode.F))
             {
-                LostFlag();
+                DropFlag();
             }
         }
 
@@ -54,9 +58,11 @@ namespace VoxTanks.Tank
                     flag.Captured = true;
                     flag.GetComponent<Collider>().enabled = false;
 
-                    _flagMode?.OnFlagCaptured(_tankSetup.Playername, flag.FlagTeam);
+                    if(_flagMode != null)
+                        _flagMode.OnFlagCaptured(_tankSetup.Playername, flag.FlagTeam);
+
                     flag.transform.SetParent(transform, true);
-                    PickupFlagClientRpc(flag.NetworkObject);
+                    CatchFlagClientRpc(flag.NetworkObject);
                 }
 
             }
@@ -79,39 +85,39 @@ namespace VoxTanks.Tank
         }
 
         [ClientRpc]
-        private void PickupFlagClientRpc(NetworkObjectReference flagReference)
+        private void CatchFlagClientRpc(NetworkObjectReference flagReference)
         {
             if (flagReference.TryGet(out NetworkObject flag))
             {
                 flag.GetComponent<Collider>().enabled = false;
                 var flagTransform = flag.transform;
-                flagTransform.localPosition = _flagPosition.localPosition;
-                flagTransform.localRotation = _flagPosition.localRotation;
+                flagTransform.SetLocalPositionAndRotation(_flagPosition.localPosition, _flagPosition.localRotation);
             }
         }
 
-        public void LostFlag()
+        public void DropFlag()
         {
-            if(_flag is null)
+            if(_flag == null)
                 return;
             
-            _flagMode?.OnFlagLost(_tankSetup.Playername, _tankSetup.Team);
+            if(_flagMode != null)
+                _flagMode.OnFlagLost(_tankSetup.Playername, _tankSetup.Team);
             
             _flag.transform.SetParent(null);
-            LostFlagClientRpc(_flag.NetworkObject);
+            DropFlagClientRpc(_flag.NetworkObject);
             _flag = null;
         }
 
 
         [ClientRpc]
-        private void LostFlagClientRpc(NetworkObjectReference flagReference)
+        private void DropFlagClientRpc(NetworkObjectReference flagReference)
         {
             if (flagReference.TryGet(out NetworkObject flag))
             {
                 flag.GetComponent<Collider>().enabled = true;
                 var flagTransform = flag.transform;
                 var position = flagTransform.position - flag.transform.forward * _lostDistance ;
-                if(Physics.Raycast(position,Vector3.down,out RaycastHit hit))
+                if (Physics.Raycast(position, Vector3.down, out RaycastHit hit)) 
                     flagTransform.position = hit.point;
             }
         }

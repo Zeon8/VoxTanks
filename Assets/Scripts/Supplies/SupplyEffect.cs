@@ -1,26 +1,24 @@
+using UnityEngine;
+using VoxTanks.Tank;
+
 namespace VoxTanks.Supplies
 {
-    using UnityEngine;
-    using UnityEngine.PlayerLoop;
-    using VoxTanks.Tank;
-
-    [System.Serializable]
     public abstract class SupplyEffect : ScriptableObject
     {
-        public float UseTime;
+        public float Duration { get; set; }
 
-        [SerializeField] private float _maxUseTime;
-
-        public float MaxUseTime => _maxUseTime;
+        public float MaxDuration => _maxUseTime;
 
         protected TankUI TankUI { get; private set; }
 
-        public virtual bool CanStartUse(GameObject tank) => true;
+        [SerializeField] private float _maxUseTime;
 
-        public virtual void StartUse(GameObject tank) => TankUI = tank.GetComponent<TankUI>();
+        public virtual bool CanBeginUse(GameObject tank) => true;
+
+        public virtual void StartUsing(GameObject tank) => TankUI = tank.GetComponent<TankUI>();
 
         public virtual void Update() { }
 
-        public virtual void EndUse() { }
+        public virtual void FinishUsing() { }
     }
 }

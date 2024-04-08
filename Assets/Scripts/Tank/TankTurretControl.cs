@@ -6,16 +6,29 @@ namespace VoxTanks.Tank
     public class TankTurretControl : NetworkBehaviour
     {
         [SerializeField] private Transform _turret;
-        [SerializeField] private Transform _camera;
         [SerializeField] private int _rotationSpeed;
         [SerializeField] private Transform _muzzle;
         [SerializeField] private Vector3 crosshairOffset;
+        [SerializeField] private TankCameraControl _cameraControlPrefab;
+
+        private Transform _camera;
+
+        private void Start()
+        {
+            if (IsServer)
+            {
+                var cameraControl = Instantiate(_cameraControlPrefab);
+                cameraControl.Setup(transform);
+                _camera = cameraControl.transform; 
+            }
+        }
 
         private void FixedUpdate()
         {
             if (_camera.localRotation.normalized.y != _turret.localRotation.normalized.y)
             {
-                RotateTurretServerRpc(_camera.localEulerAngles.y);
+                float cameraY =  _camera.eulerAngles.y - transform.eulerAngles.y;
+                RotateTurretServerRpc(cameraY);
             }
             if (_camera.rotation.normalized.x != _muzzle.rotation.normalized.x)
             {

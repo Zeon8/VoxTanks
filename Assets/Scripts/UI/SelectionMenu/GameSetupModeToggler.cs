@@ -1,24 +1,32 @@
 using Unity.Netcode;
 using UnityEngine;
 using VoxTanks.GameModes;
-using VoxTanks.Tank;
-using VoxTanks.UI;
+using VoxTanks.Game;
 
 namespace VoxTanks.UI.SelectionMenu
 {
     public class GameSetupModeToggler : MonoBehaviour
     {
+        [SerializeField] private GameSetup _gameSetup;
         [SerializeField] private GameSetupMenu _defaultMenu;
         [SerializeField] private GameSetupMenu _teamsModeMenu;
-        private void Start()
-        {
-            GameSetupMenu menu;
-            if(NetworkManager.Singleton.GetComponent<TeamsGameMode>())
-                menu = _teamsModeMenu;
-            else
-                menu = _defaultMenu;
 
-            menu.gameObject.SetActive(true);
+        public GameSetupMenu CurrentMenu { get; private set; }
+
+        private GameSetupMenu DetermineCurrentMenu()
+        {
+            if (_gameSetup.CurrentGameMode is BaseTeamsGameMode)
+                return _teamsModeMenu;
+            else
+                return _defaultMenu;
         }
+
+        public void Show()
+        {
+            CurrentMenu = DetermineCurrentMenu();
+            SetVisible(true);
+        }
+
+        public void SetVisible(bool visible) => CurrentMenu.gameObject.SetActive(visible);
     }
 }

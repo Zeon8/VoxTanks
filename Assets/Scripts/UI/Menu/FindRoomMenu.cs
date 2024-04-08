@@ -1,45 +1,32 @@
-using System;
-using System.Collections.Generic;
-using ExitGames.Client.Photon;
-using Netcode.Transports.PhotonRealtime;
-using Photon.Realtime;
+using System.Net;
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using UnityEngine;
+using VoxTanks.Game;
 using VoxTanks.UI.Menu;
 
-public class FindRoomMenu : BaseRoomMenu
+public class FindRoomMenu : MonoBehaviour
 {
-    private PhotonGame _photonGame = new PhotonGame();
+    [SerializeField] private GameNetworkDiscovery _discovery;
+    [SerializeField] private UnityTransport _transport;
 
     [SerializeField] private RoomMenuItem _roomItemPrefab;
     [SerializeField] private Transform _content;
 
-    private TypedLobby _lobby = new TypedLobby("custom", LobbyType.Default);
-
-    private new void Start()
+    private void Start()
     {
-        _photonGame.Setup();
-        _photonGame.OnConnectedToMaster += () => _photonGame.OpJoinLobby(_lobby);
-        _photonGame.OnRoomListUpdate += OnRoomListUpdate;
+        _discovery.StartClient();
     }
 
-    private void OnRoomListUpdate(List<RoomInfo> rooms)
+    public void AddRoom(GameInfo battle, IPAddress address)
     {
-        ClearItems();
-        foreach (RoomInfo room in rooms)
-        {
-            RoomMenuItem roomItem = Instantiate(_roomItemPrefab, _content);
-            string map = room.CustomProperties["map"] as string;
-            string gamemode = room.CustomProperties["gm"] as string;
-            roomItem.Setup(room.Name,map,gamemode,room.PlayerCount,room.MaxPlayers,() => JoinRoom(room.Name));
-        }
+        RoomMenuItem roomItem = Instantiate(_roomItemPrefab, _content);
+        roomItem.Setup(battle, () => JoinRoom(address));
     }
 
-    private void JoinRoom(string name)
+    private void JoinRoom(IPAddress address)
     {
-        var transport = (PhotonRealtimeTransport2)NetworkManager.Singleton.NetworkConfig.NetworkTransport;
-        transport.RoomName = name;
-        transport.Lobby = _lobby;
+        _transport.ConnectionData.Address = address.ToString();
         NetworkManager.Singleton.StartClient();
     }
 
@@ -49,13 +36,9 @@ public class FindRoomMenu : BaseRoomMenu
             Destroy(item.gameObject);
     }
 
-    private void Update()
+    public void Refresh()
     {
-        _photonGame.Update();
-    }
-
-    private void LateUpdate()
-    {
-        _photonGame.LateUpdate();
+        ClearItems();
+        _discovery.ClientBroadcast(new DiscoveryBroadcastData());
     }
 }

@@ -13,43 +13,43 @@ namespace VoxTanks.Tank
 
         private void Start()
         {
-            _supplyUI = GameObject.FindObjectOfType<SupplyUI>();
-            _statusUI = GameObject.FindObjectOfType<StatusBar>();
+            _supplyUI = FindObjectOfType<SupplyUI>();
+            _statusUI = FindObjectOfType<StatusBar>();
         }
 
         [ClientRpc]
         public void SetArmorProgressClientRpc(float progress)
         {
             if (IsLocalPlayer)
-                _supplyUI.Armor.Progress = progress;
+                _supplyUI.Armor.SetProgress(progress);
         }
 
         [ClientRpc]
         public void SetMedkitProgressClientRpc(float progress)
         {
             if (IsLocalPlayer)
-                _supplyUI.Medkit.Progress = progress;
+                _supplyUI.Medkit.SetProgress(progress);
         }
 
         [ClientRpc]
         public void SetDamageProgressClientRpc(float progress)
         {
             if (IsLocalPlayer)
-                _supplyUI.Damage.Progress = progress;
+                _supplyUI.Damage.SetProgress(progress);
         }
 
         [ClientRpc]
         public void SetNitroProgressClientRpc(float progress)
         {
             if (IsLocalPlayer)
-                _supplyUI.Nitro.Progress = progress;
+                _supplyUI.Nitro.SetProgress(progress);
         }
 
         [ClientRpc]
         public void SetUIVisibleClientRpc(bool value)
         {
             if (IsLocalPlayer)
-                _statusUI.Visible = value;
+                _statusUI.SetVisible(value);
         }
 
     }

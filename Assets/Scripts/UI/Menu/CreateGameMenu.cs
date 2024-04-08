@@ -1,49 +1,43 @@
 using System;
-using ExitGames.Client.Photon;
-using ExitGames.Client.Photon.StructWrapping;
-using Netcode.Transports.PhotonRealtime;
-using Photon.Realtime;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using VoxTanks.Game;
 
 namespace VoxTanks.UI.Menu
 {
     public class CreateGameMenu : BaseRoomMenu
     {
-        private PhotonRealtimeTransport2 _transport;
-
         [SerializeField] private TMP_InputField _roomNameInput;
         [SerializeField] private Slider _maxPlayersSlider;
         [SerializeField] private Slider _playTimeSlider;
+        [SerializeField] private GameSettings _settings;
 
         protected override void Start()
         {
             base.Start();
-            _transport = (PhotonRealtimeTransport2)NetworkManager.Singleton.NetworkConfig.NetworkTransport;
         }
-
 
         public void OnCreateClicked()
         {
-            var roomProperties = new Hashtable
+            NetworkManager.StartHost();
+            NetworkManager.SceneManager.LoadScene(SelectedMap, LoadSceneMode.Single);
+
+            var battleInfo = new GameInfo()
             {
-                ["map"] = _selectedMap,
-                ["gm"] = _selectedGamemode.Name,
-                ["time"] = _playTimeSlider.value
+                Name = _roomNameInput.text,
+                GameMode = SelectedGamemode.GameMode,
+                Map = SelectedMap,
+                MaxPlayerCount = (byte)_maxPlayersSlider.value,
+                PlayerCount = 1
             };
-            _transport.Lobby = new TypedLobby("custom", LobbyType.Default);
-            _transport.CustomRoomProperties = roomProperties;
-            _transport.RoomName = _roomNameInput.text;
-            _transport.MaxPlayers = (byte)_maxPlayersSlider.value;
-            NetworkManager.Singleton.gameObject.AddComponent(_selectedGamemode.GameMode.GetType());
-            _networkManager.OnServerStarted += () =>
-            {
-                _networkManager.SceneManager.LoadScene(_selectedMap, LoadSceneMode.Single);
-            };
-            NetworkManager.Singleton.StartHost();
+            _settings.BattleInfo = battleInfo;
+
+            var discovery = NetworkManager.Singleton.GetComponent<GameNetworkDiscovery>();
+            discovery.DiscoveryData = battleInfo;
+            discovery.StartServer();
         }
     }
 }

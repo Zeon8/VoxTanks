@@ -7,12 +7,6 @@ namespace VoxTanks.Tank.Spawners
     public class TeamTankRespawner : MonoBehaviour, ITankRespawner
     {
         [SerializeField] private TankSpawn[] _tankSpawns;
-
-        private Dictionary<TankTeam, int> _tankSpawnOrders = new Dictionary<TankTeam, int>()
-        {
-            {TankTeam.Blue,0},
-            {TankTeam.Red,0}
-        };
         [SerializeField] private LayerMask _layerMask;
 
         public void RespawnTank(Transform tank, TankTeam tankTeam)

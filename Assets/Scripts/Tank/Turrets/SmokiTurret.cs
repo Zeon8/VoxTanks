@@ -14,24 +14,20 @@ namespace VoxTanks.Tank.Turrets {
             if (Physics.Raycast(ray, out RaycastHit hit) && !hit.collider.CompareTag("Player"))
             {
                 SpawnProjectile(hit.point);
-                ProcessShoot(ray);
+                HandleShot(hit);
             } 
         }
 
-        protected virtual void ProcessShoot(Ray ray)
+        protected virtual void HandleShot(RaycastHit hit)
         {
-            if (Physics.Raycast(ray, out RaycastHit hit))
-            {
-                var health = hit.collider.GetComponentInParent<TankHealth>();
-                health?.TakeDamage(_damage * AdditionalDamage,TankSetup.Playername,TankSetup.Team);
-            }
-            
+            var health = hit.collider.GetComponentInParent<TankHealth>();
+            if(health != null)
+                health.TakeDamage(Damage, TankSetup.Playername, TankSetup.Team);
         }
 
         protected virtual void SpawnProjectile(Vector3 position)
         {
             GameObject gm = Instantiate(_projectileEffect, position, Quaternion.identity);
-            Debug.Log(gm);
             gm.GetComponent<NetworkObject>().Spawn();
         }
 

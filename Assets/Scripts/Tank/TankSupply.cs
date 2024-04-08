@@ -8,15 +8,15 @@ namespace VoxTanks.Tank
 
     public class TankSupply : NetworkBehaviour
     {
-        [SerializeField] private List<SupplyEffect> _supplies = new List<SupplyEffect>();
+        [SerializeField] private readonly List<SupplyEffect> _supplies = new List<SupplyEffect>();
 
         private void OnCollisionEnter(Collision collisionInfo)
         {
             var container = collisionInfo.gameObject.GetComponent<SupplyContainer>();
-            if (container != null && container.Supply.CanStartUse(gameObject))
+            if (container != null && container.Supply.CanBeginUse(gameObject))
             {
                 SupplyEffect supply = Instantiate(container.Supply);
-                supply.StartUse(gameObject);
+                supply.StartUsing(gameObject);
                 _supplies.Add(supply);
                 if (IsServer)
                     container.Destroy();
@@ -27,14 +27,14 @@ namespace VoxTanks.Tank
         {
             foreach (var supply in _supplies)
             {
-                if (supply.UseTime < supply.MaxUseTime)
+                if (supply.Duration < supply.MaxDuration)
                 {
                     supply.Update();
-                    supply.UseTime += Time.deltaTime;
+                    supply.Duration += Time.deltaTime;
                 }
                 else
                 {
-                    supply.EndUse();
+                    supply.FinishUsing();
                     _supplies.Remove(supply);
                 }
             }

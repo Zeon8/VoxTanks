@@ -1,56 +1,54 @@
-using System;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using VoxTanks.Tank;
-using VoxTanks.Tank.Spawners;
+using VoxTanks.UI;
+using VoxTanks.UI.SelectionMenu;
 
-namespace VoxTanks.Network
+namespace VoxTanks.Game
 {
     public class TankSpawner : NetworkBehaviour
     {
-        private IPlayerSetup PlayerSetup { get; set; }
-        //private TankSettings TankSettings { get; set; }
+        [SerializeField] private string _mainMenuScene;
         [SerializeField] private NetworkObject _tank;
+        private GameSetupMenu _menu;
+
 
         private void Start()
         {
-            PlayerSetup = NetworkManager.GetComponent<IPlayerSetup>();
-
-            if(IsLocalPlayer)
-                PlayerSetup.OnPlayerReady += OnPlayerReady;
+            if (SceneManager.GetActiveScene().name == _mainMenuScene)
+                NetworkManager.SceneManager.OnLoadComplete += SceneManager_OnLoadComplete;
+            else 
+                Init();
         }
 
-        private void OnPlayerReady(int turret, int hull, TankTeam tankTeam)
+        private void SceneManager_OnLoadComplete(ulong clientId, string sceneName, LoadSceneMode loadSceneMode)
         {
-            PlayerSetup.OnPlayerReady -= OnPlayerReady;
-            SpawnTankServerRpc(NetworkManager.LocalClientId, GameSettings.PlayerName, turret, hull, tankTeam);
+            NetworkManager.SceneManager.OnLoadComplete -= SceneManager_OnLoadComplete;
+            Init();
+        }
+
+        private void Init()
+        {
+            FindObjectOfType<GameSetupModeToggler>().Show();
+            _menu = FindObjectOfType<GameSetupMenu>();
+            _menu.Selected += OnPlayerReady;
+        }
+
+        private void OnPlayerReady(TankSettings tankSettings)
+        {
+            _menu.Selected -= OnPlayerReady;
+            SpawnTankServerRpc(NetworkManager.LocalClientId, tankSettings);
         }
 
         [ServerRpc]
-        private void SpawnTankServerRpc(ulong localClientId,string name, int turret, int hull, TankTeam team)
+        private void SpawnTankServerRpc(ulong localClientId, TankSettings tankSettings)
         {
             NetworkObject tank = Instantiate(_tank);
             tank.SpawnAsPlayerObject(localClientId);
-            TankSetup(tank,name,turret,hull,team);
+            tank.GetComponent<TankSettingsApplier>().ApplySettingsServerRpc(tankSettings);
+            tank.GetComponent<TankLife>().Respawn();
             NetworkObject.Despawn(true);
-        }
-
-        protected virtual void TankSetup(NetworkObject tank,string name, int turret, int hull, TankTeam team)
-        {
-            tank.GetComponent<TankSetup>()?.Setup(name, team);
-            tank.GetComponent<TankIdentifier>()?.SetupClientRpc();
-
-            if (tank.TryGetComponent(out TankSettingsApplier tankSettingsApplier))
-            {
-                tankSettingsApplier.SelectTurretServerRpc(turret);
-                tankSettingsApplier.SelectHullServerRpc(hull);
-            }
-
-            if (tank.TryGetComponent(out TankLife tankLife))
-            {
-                tankLife.Setup(PlayerSetup.Respawner, team);
-                tankLife.RespawnTank();
-            }
         }
     }
 }

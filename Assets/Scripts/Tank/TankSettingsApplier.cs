@@ -1,64 +1,86 @@
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Events;
+using VoxTanks.UI.SelectionMenu;
 
 namespace VoxTanks.Tank
 {
 
     public class TankSettingsApplier : NetworkBehaviour
     {
-        public TankSettings TankSettings { get; set; }
+        [field: SerializeField]
+        public UnityEvent<TankSettings> OnSettingsChanged { get; private set; } 
 
         [SerializeField] private GameObject[] _turrets;
         [SerializeField] private GameObject[] _hulls;
 
-        private NetworkVariable<int> _selectedTurret = new NetworkVariable<int>();
-        private NetworkVariable<int> _selectedHull = new NetworkVariable<int>();
+        private NetworkVariable<TankSettings> _settings = new NetworkVariable<TankSettings>();
+        private TankSettings? _settingsForRespawn;
 
-        private void Start()
+        public void Start()
         {
-            SelectTurret(_selectedTurret.Value);
-            SelectHull(_selectedHull.Value);
+            if (IsLocalPlayer)
+            {
+                FindObjectOfType<GameSetupModeToggler>().CurrentMenu.Selected +=
+                    settings => ApplySettingsAfterRespawnServerRpc(settings);
+            }
+
+            if (IsClient)
+            {
+                _settings.OnValueChanged = (_, value) => ApplyTurretAndHull(value);
+                ApplyTurretAndHull(_settings.Value);
+            }
+            if(IsServer)
+                GetComponent<TankLife>().Respawned += TankSettingsApplier_Respawned;
         }
 
-        [ServerRpc(RequireOwnership=false)]
-        public void SelectTurretServerRpc(int selectedTurret)
+        [ServerRpc]
+        public void ApplySettingsServerRpc(TankSettings settings)
         {
-            _selectedTurret.Value = selectedTurret;
-            SelectTurretClientRpc(selectedTurret);
+            _settings.Value = settings;
+            OnSettingsChanged.Invoke(settings);
+            ApplyTurretAndHull(settings);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        public void SelectHullServerRpc(int selectedHull)
+        [ServerRpc]
+        public void ApplySettingsAfterRespawnServerRpc(TankSettings settings)
         {
-            _selectedHull.Value = selectedHull;
-            SelectHullClientRpc(selectedHull);
+            _settingsForRespawn = settings;
         }
 
-        [ClientRpc]
-        public void SelectTurretClientRpc(int selectedTurret) => SelectTurret(selectedTurret);
-
-        [ClientRpc]
-        public void SelectHullClientRpc(int selectedHull) => SelectHull(selectedHull);
-
-        private void SelectTurret(int selectedTurret)
+        private void TankSettingsApplier_Respawned()
         {
-            if (selectedTurret > _turrets.Length)
+            if (_settingsForRespawn.HasValue)
+            {
+                ApplySettingsServerRpc(_settingsForRespawn.Value);
+                _settingsForRespawn = null;
+            }
+        }
+
+        private void ApplyTurretAndHull(TankSettings settings)
+        {
+            ApplyTurret(settings.Turret);
+            ApplyHull(settings.Hull);
+        }
+
+        private void ApplyTurret(int selectedTurret) => SelectPart(_turrets, selectedTurret);
+        private void ApplyHull(int selectedHull)
+        {
+            SelectPart(_hulls, selectedHull);
+            _hulls[selectedHull].GetComponent<TankHullSettings>().Apply();
+        }
+
+        private void SelectPart(GameObject[] parts, int selectedPart)
+        {
+            if (selectedPart > parts.Length)
                 return;
 
-            foreach (var turret in _turrets)
-                turret.SetActive(false);
+            foreach (var part in parts)
+                part.SetActive(false);
 
-            _turrets[selectedTurret].SetActive(true);
+            parts[selectedPart].SetActive(true);
         }
 
-        private void SelectHull(int selectedHull)
-        {
-            if (selectedHull > _hulls.Length)
-                return;
-
-            foreach (var hull in _hulls)
-                hull.SetActive(false);
-            _hulls[selectedHull].SetActive(true);
-        }
+        
     }
 }

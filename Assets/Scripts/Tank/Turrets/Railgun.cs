@@ -8,10 +8,10 @@ namespace VoxTanks.Tank.Turrets
 {
     public class Railgun : TankTurret
     {
-        
         [SerializeField] private float _beforeShootTime;
         [SerializeField] private RailgunRay _ray;
         [SerializeField] private Transform _muzzle;
+
         private FlashDisplay _flashDisplay;
         
         private void Start()
@@ -53,7 +53,6 @@ namespace VoxTanks.Tank.Turrets
             DamageTarget(ray);
         }
 
-
         private IEnumerator ShowFlash()
         {
             _flashDisplay.ShowFlashClientRpc();
@@ -67,13 +66,14 @@ namespace VoxTanks.Tank.Turrets
             foreach (RaycastHit target in hits)
             {
                 var tankHealth = target.collider.GetComponentInParent<TankHealth>();
-                tankHealth?.TakeDamage(Damage,TankSetup.Playername,TankSetup.Team);
+                if (tankHealth != null)
+                    tankHealth.TakeDamage(Damage, TankSetup.Playername, TankSetup.Team);
             }
         }
 
         private void SpawnRay(Ray ray)
         {
-            if (Physics.Raycast(ray,out RaycastHit hit,Distance,LayerMask))
+            if (Physics.Raycast(ray, out RaycastHit hit, Distance, LayerMask))
             {
                 RailgunRay railgunRay = Instantiate(_ray);
                 railgunRay.Setup(_muzzle.position, hit.point);
