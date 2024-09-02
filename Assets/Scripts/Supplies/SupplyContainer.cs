@@ -18,7 +18,6 @@ namespace VoxTanks.Supplies
 
         private Animator _animator;
         private Rigidbody _rigidBody;
-        private bool _started;
         protected TankUI TankUI;
 
         void Start()
@@ -32,22 +31,27 @@ namespace VoxTanks.Supplies
 
         private void OnCollisionEnter()
         {
-            GetComponent<Rigidbody>().drag = _defalutDrag;
-            Destroy(Parachute);
+            if (Parachute != null)
+            {
+                GetComponent<Rigidbody>().drag = _defalutDrag;
+                Destroy(Parachute);
+            }
         }
 
-        public void Destroy()
+        [ClientRpc]
+        public void DestroyClientRpc() => StartCoroutine(Destroy());
+
+        private IEnumerator Destroy()
         {
             _collider.enabled = false;
             _rigidBody.isKinematic = true;
-            _animator.Play(_animationName);
-            StartCoroutine(DestroyAfter(_destroyAfter));
-        }
+            _rigidBody.rotation = Quaternion.identity;
 
-        private IEnumerator DestroyAfter(float seconds)
-        {
-            yield return new WaitForSeconds(seconds);
-            NetworkObject.Despawn();
+            _animator.Play(_animationName);
+            yield return new WaitForSeconds(_destroyAfter);
+
+            if (IsServer)
+                NetworkObject.Despawn(true);
         }
     }
 }

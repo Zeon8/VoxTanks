@@ -10,7 +10,6 @@ namespace VoxTanks.Tank
         [SerializeField] private AudioSource _audioSource;
         [SerializeField] private AudioSource _movementAudioSource;
         [SerializeField] private AudioClip _useSupplyClip;
-        [SerializeField] private AudioClip _tankExplodeSound;
         [SerializeField] private AudioClip[] _shotSounds;
 
         [ClientRpc]
@@ -25,11 +24,5 @@ namespace VoxTanks.Tank
 
         [ClientRpc]
         public void PlayShotClientRpc(int index) => _audioSource.PlayOneShot(_shotSounds[index]);
-
-        [ClientRpc]
-        public void PlayTankExplodeClientRpc()
-        {
-            _audioSource.PlayOneShot(_tankExplodeSound);
-        }
     }
 }

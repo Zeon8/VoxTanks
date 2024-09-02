@@ -18,7 +18,6 @@ namespace VoxTanks.Tank.Turrets
         [ClientRpc]
         public void PlayShootAnimationClientRpc()
         {
-            Debug.Log("Activated!");
             _animator?.SetTrigger(_animationName);
         }
 

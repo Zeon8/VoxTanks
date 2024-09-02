@@ -1,10 +1,8 @@
-using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using VoxTanks.Game;
 using VoxTanks.Tank;
-using VoxTanks.UI;
 
 namespace VoxTanks.GameModes
 {
@@ -19,7 +17,7 @@ namespace VoxTanks.GameModes
 
         private void Start()
         {
-            if (_gameSetup.CurrentGameMode is not BaseTeamsGameMode)
+            if (_gameSetup.CurrentGameMode is not TeamGameMode)
             {
                 gameObject.SetActive(false);
                 return;

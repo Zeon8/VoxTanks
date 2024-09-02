@@ -2,35 +2,36 @@ using Unity.Netcode;
 using UnityEngine;
 using VoxTanks.GameModes.FlagMode;
 using VoxTanks.Game;
+using System;
+using static Unity.IO.LowLevel.Unsafe.AsyncReadManagerMetrics;
 
 namespace VoxTanks.Tank
 {
     public class TankFlagCatcher : NetworkBehaviour
     {
-        private TankSetup _tankSetup;
-        private CatchFlagMode _flagMode;
         [SerializeField] private Transform _flagPosition;
         [SerializeField] private float _lostDistance;
 
+        private TankSetup _tankSetup;
+        private CatchFlagMode _flagMode;
         private Flag _flag;
 
         private void Start()
         {
-            if (FindObjectOfType<GameSetup>().CurrentGameMode is not CatchFlagMode mode)
+            _flagMode = FindObjectOfType<GameSetup>().CurrentGameMode as CatchFlagMode;
+            if (!IsServer || _flagMode == null)
+            {
                 return;
+            }
 
-            _flagMode = mode;
             _tankSetup = GetComponent<TankSetup>();
         }
 
         private void Update()
         {
-            if(Input.GetKeyDown(KeyCode.F))
-            {
-                DropFlag();
-            }
+            if(Input.GetKeyDown(KeyCode.F) && IsLocalPlayer)
+                DropFlagServerRpc();
         }
-
 
         private void OnTriggerEnter(Collider other)
         {
@@ -38,40 +39,27 @@ namespace VoxTanks.Tank
             {
                 if (flag.FlagTeam == _tankSetup.Team)
                 {
-                    if (flag.Captured)
+                    if (flag.WasCaptured)
                     {
-                        _flagMode.OnFlagReturned(_tankSetup.Playername, flag.FlagTeam);
-                        ReturnFlag(flag);
+                        OnFlagReturnedClientRpc(_tankSetup.PlayerName, flag.FlagTeam);
+                        ReturnFlagClientRpc(flag.NetworkObject);
                     }
                     else if (_flag != null)
                     {
-                        _flag.transform.SetParent(null);
-                        _flagMode.OnFlagDelivered(_tankSetup.Playername,_tankSetup.Team, _flag.FlagTeam);
-                        ReturnFlag(_flag);
+                        OnFlagDeliveredClientRpc(_tankSetup.PlayerName, _tankSetup.Team, _flag.FlagTeam);
+                        ReturnFlagClientRpc(_flag.NetworkObject);
                         _flag = null;
                     }
-                    
                 }
                 else
                 {
-                    _flag = flag;
-                    flag.Captured = true;
-                    flag.GetComponent<Collider>().enabled = false;
-
-                    if(_flagMode != null)
-                        _flagMode.OnFlagCaptured(_tankSetup.Playername, flag.FlagTeam);
-
-                    flag.transform.SetParent(transform, true);
+                    flag.Capture(transform);
+                    OnFlagCapturedClientRpc(_tankSetup.PlayerName, flag.FlagTeam);
                     CatchFlagClientRpc(flag.NetworkObject);
+                    _flag = flag;
                 }
 
             }
-        }
-
-        private void ReturnFlag(Flag flag)
-        {
-            flag.Captured = false;
-            ReturnFlagClientRpc(flag.NetworkObject);
         }
 
         [ClientRpc]
@@ -79,8 +67,7 @@ namespace VoxTanks.Tank
         {
             if (flagReference.TryGet(out NetworkObject flag))
             {
-                flag.GetComponent<Collider>().enabled = true;
-                flag.GetComponent<Flag>().ReturnFlagToPoint();
+                flag.GetComponent<Flag>().Return();
             }
         }
 
@@ -89,37 +76,56 @@ namespace VoxTanks.Tank
         {
             if (flagReference.TryGet(out NetworkObject flag))
             {
-                flag.GetComponent<Collider>().enabled = false;
-                var flagTransform = flag.transform;
-                flagTransform.SetLocalPositionAndRotation(_flagPosition.localPosition, _flagPosition.localRotation);
+                flag.transform.SetLocalPositionAndRotation(_flagPosition.localPosition, _flagPosition.localRotation);
             }
         }
+
+        [ServerRpc]
+        private void DropFlagServerRpc() => DropFlag();
 
         public void DropFlag()
         {
             if(_flag == null)
                 return;
-            
-            if(_flagMode != null)
-                _flagMode.OnFlagLost(_tankSetup.Playername, _tankSetup.Team);
-            
-            _flag.transform.SetParent(null);
-            DropFlagClientRpc(_flag.NetworkObject);
+
+            GroundFlagClientRpc(_flag.NetworkObject);
+            OnFlagLostClientRpc(_tankSetup.PlayerName, _flag.FlagTeam);
+            _flag.Drop();
+
             _flag = null;
         }
 
-
         [ClientRpc]
-        private void DropFlagClientRpc(NetworkObjectReference flagReference)
+        private void GroundFlagClientRpc(NetworkObjectReference flagReference)
         {
             if (flagReference.TryGet(out NetworkObject flag))
             {
-                flag.GetComponent<Collider>().enabled = true;
                 var flagTransform = flag.transform;
                 var position = flagTransform.position - flag.transform.forward * _lostDistance ;
-                if (Physics.Raycast(position, Vector3.down, out RaycastHit hit)) 
+                if (Physics.Raycast(position, Vector3.down * float.MaxValue, out RaycastHit hit)) 
                     flagTransform.position = hit.point;
             }
+        }
+
+        [ClientRpc]
+        private void OnFlagReturnedClientRpc(string name, TankTeam team) => _flagMode.OnFlagReturned(name, team);
+
+        [ClientRpc]
+        private void OnFlagDeliveredClientRpc(string playerName, TankTeam team, TankTeam flagTeam)
+        {
+            _flagMode.OnFlagDelivered(playerName, team, flagTeam);
+        }
+
+        [ClientRpc]
+        private void OnFlagCapturedClientRpc(string playerName, TankTeam flagTeam)
+        {
+            _flagMode.OnFlagCaptured(playerName, flagTeam);
+        }
+
+        [ClientRpc]
+        private void OnFlagLostClientRpc(string playerName, TankTeam team)
+        {
+            _flagMode.OnFlagLost(playerName, team);
         }
     }
 }

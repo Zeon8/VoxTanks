@@ -1,10 +1,14 @@
 using Unity.Netcode;
+using UnityEditor;
 using UnityEngine;
 
 namespace VoxTanks.Tank
 {
     public class TankCameraControl : MonoBehaviour
     {
+        [SerializeField] private Transform _defaultCameraPosition;
+        [SerializeField] private LayerMask _layerMask;
+        [SerializeField] private float _distanceWhenObsticle;
         [SerializeField] private Transform _camera;
         [SerializeField] private float _sensivityX;
         [SerializeField] private float _sensivityY;
@@ -13,17 +17,33 @@ namespace VoxTanks.Tank
         private Transform _tankTransform;
         private TankPause _tankPause;
         private Vector3 _rotation = Vector3.zero;
+        private Vector3 _hitPoint;
+        private float _distance;
 
         public void Setup(Transform tankTransform)
         {
             _tankTransform = tankTransform;
             _tankPause = _tankTransform.GetComponent<TankPause>();
+            _distance = Vector3.Distance(transform.position, _defaultCameraPosition.position);
         }
 
         private void Update()
         {
-            if(!_tankPause.Paused)
+            if (!_tankPause.Paused)
+            {
                 Rotate();
+
+                var direction = _defaultCameraPosition.position - transform.position;
+                if (Physics.Raycast(transform.position, direction, out RaycastHit hit, _distance, _layerMask.value))
+                {
+                    _hitPoint = hit.point;
+                    Vector3 position = _defaultCameraPosition.localPosition;
+                    position.z = -Vector3.Distance(transform.position, hit.point) / _distanceWhenObsticle;
+                    _camera.localPosition = position;
+                }
+                else
+                    _camera.position = _defaultCameraPosition.position;
+            }
         }
 
         private void LateUpdate()

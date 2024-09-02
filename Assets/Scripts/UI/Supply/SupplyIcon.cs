@@ -12,8 +12,12 @@ namespace VoxTanks.UI.Supply
 
         public void SetProgress(float value)
         {
-            gameObject.SetActive(value > 0);
             Image.fillAmount = 1 - value;
+        }
+
+        public void Reset()
+        {
+            Image.fillAmount = 0;
         }
     }
 }

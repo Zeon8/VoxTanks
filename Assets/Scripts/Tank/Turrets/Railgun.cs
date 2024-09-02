@@ -3,6 +3,7 @@ using System.Collections;
 using Effects;
 using Unity.Netcode;
 using UnityEngine;
+using VoxTanks.UI;
 
 namespace VoxTanks.Tank.Turrets
 {
@@ -11,69 +12,66 @@ namespace VoxTanks.Tank.Turrets
         [SerializeField] private float _beforeShootTime;
         [SerializeField] private RailgunRay _ray;
         [SerializeField] private Transform _muzzle;
+        [SerializeField] private LayerMask _layerMask;
+        [SerializeField] private float _distance;
 
         private FlashDisplay _flashDisplay;
+        private RaycastHit[] _hits = new RaycastHit[5];
         
-        private void Start()
+        protected override void AfterStart()
         {
             _flashDisplay = GetComponent<FlashDisplay>();
         }
-        protected override void Shoot(Ray ray)
-        {
-            StartCoroutine(ShowFlashAndShoot());
-        }
+
+        protected override void Shoot(Ray ray) => ShootClientRpc();
+
+        [ClientRpc]
+        private void ShootClientRpc() => StartCoroutine(ShowFlashAndShoot());
 
         private IEnumerator ShowFlashAndShoot()
         {
             yield return ShowFlash();
 
-#if EXPERIMENTAL
-            MakeShotClientRpc();
-#else
-            var ray = new Ray(_muzzle.position, _muzzle.forward);
-            MakeShot(ray);
-#endif
+            if (IsLocalPlayer)
+            {
+                Ray ray = GetRay();
+                ShootServerRpc(ray);
+            }
         }
 
-#if EXPERIMENTAL
-        [ClientRpc]
-        private void MakeShotClientRpc() 
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Crosshair.Position);
-            MakeShotServerRpc(ray);
-        }
-        
         [ServerRpc]
-        private void MakeShotServerRpc(Ray ray) => MakeShot(ray);
-#endif
-
-        private void MakeShot(Ray ray)
+        private void ShootServerRpc(Ray ray)
         {
-            SpawnRay(ray);
-            DamageTarget(ray);
+            SpawnRayClientRpc(ray);
+            DamageTargets(ray);
         }
 
         private IEnumerator ShowFlash()
         {
-            _flashDisplay.ShowFlashClientRpc();
+            _flashDisplay.Show();
             yield return new WaitForSeconds(_beforeShootTime);
-            _flashDisplay.HideClientRpc();
+            _flashDisplay.Hide();
         }
 
-        private void DamageTarget(Ray ray)
+        private void DamageTargets(Ray ray)
         {
-            RaycastHit[] hits = Physics.RaycastAll(ray);
-            foreach (RaycastHit target in hits)
+            Physics.RaycastNonAlloc(ray, _hits);
+            foreach (RaycastHit target in _hits)
             {
+                if (target.collider == null)
+                    break;
+
                 var tankHealth = target.collider.GetComponentInParent<TankHealth>();
                 if (tankHealth != null)
-                    tankHealth.TakeDamage(Damage, TankSetup.Playername, TankSetup.Team);
+                    tankHealth.TakeDamage(Damage, TankSetup.PlayerName, TankSetup.Team);
             }
+            Array.Clear(_hits, 0, _hits.Length);
         }
 
-        private void SpawnRay(Ray ray)
+        [ClientRpc]
+        private void SpawnRayClientRpc(Ray ray)
         {
-            if (Physics.Raycast(ray, out RaycastHit hit, Distance, LayerMask))
+            if (Physics.Raycast(ray, out RaycastHit hit, _distance, _layerMask))
             {
                 RailgunRay railgunRay = Instantiate(_ray);
                 railgunRay.Setup(_muzzle.position, hit.point);

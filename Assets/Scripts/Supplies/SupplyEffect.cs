@@ -5,20 +5,22 @@ namespace VoxTanks.Supplies
 {
     public abstract class SupplyEffect : ScriptableObject
     {
-        public float Duration { get; set; }
+        public float Time { get; set; }
 
-        public float MaxDuration => _maxUseTime;
+        public abstract SupplyEffectType EffectType { get; }
 
-        protected TankUI TankUI { get; private set; }
+        public float Duration => _maxUseTime;
 
         [SerializeField] private float _maxUseTime;
 
-        public virtual bool CanBeginUse(GameObject tank) => true;
+        public void Terminate() => Time = Duration; 
 
-        public virtual void StartUsing(GameObject tank) => TankUI = tank.GetComponent<TankUI>();
+        public virtual bool CanBeUsed(GameObject tank) => true;
+
+        public virtual void StartUsing(GameObject tank) { }
 
         public virtual void Update() { }
 
-        public virtual void FinishUsing() { }
+        public virtual void Stop() { }
     }
 }

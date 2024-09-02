@@ -28,7 +28,7 @@ namespace VoxTanks.Tank.Turrets
         {
             TwinsProjectile projectile = Instantiate(_projectile, position, rotation);
             projectile.NetworkObject.Spawn();
-            projectile.Setup(Damage, TankSetup.Playername, TankSetup.Team);
+            projectile.Setup(Damage, TankSetup.PlayerName, TankSetup.Team);
         }
     }
 }

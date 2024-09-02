@@ -8,10 +8,10 @@ namespace VoxTanks.Game
 {
     public class GameSetup : NetworkBehaviour
     {
-        public BaseGameMode CurrentGameMode { get; private set; }
+        public GameMode CurrentGameMode { get; private set; }
 
         [ReorderableList(Foldable = true)]
-        [SerializeField] private BaseGameMode[] _gameModes;
+        [SerializeField] private GameMode[] _gameModes;
         [SerializeField] private GameSettings _gameSettings;
 
         private readonly NetworkVariable<GameInfo> _battleInfo = new NetworkVariable<GameInfo>();
@@ -28,10 +28,7 @@ namespace VoxTanks.Game
 
         private void Start()
         {
-            if(IsServer)
-            {
-                CurrentGameMode.Initialize();
-            }
+            CurrentGameMode.Initialize();
         }
     }
 }

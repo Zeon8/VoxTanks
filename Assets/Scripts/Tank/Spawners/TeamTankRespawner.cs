@@ -12,8 +12,8 @@ namespace VoxTanks.Tank.Spawners
         public void RespawnTank(Transform tank, TankTeam tankTeam)
         {
             Transform point = GetSpawnPoint(tankTeam);
-            if(point != null)
-                tank.transform.SetPositionAndRotation(point.position,point.rotation);
+            if (point != null)
+                tank.SetPositionAndRotation(point.position, point.rotation);
         }
 
         private Transform GetSpawnPoint(TankTeam tankTeam)

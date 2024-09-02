@@ -16,7 +16,8 @@ namespace Vox.UI.Menu
 
         private void OnDestroy()
         {
-            NetworkManager.Singleton.OnClientStopped -= Singleton_OnClientStopped;
+            if(NetworkManager.Singleton != null)
+                NetworkManager.Singleton.OnClientStopped -= Singleton_OnClientStopped;
         }
 
         private void Singleton_OnClientStopped(bool isHostMode)

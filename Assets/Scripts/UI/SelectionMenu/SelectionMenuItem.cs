@@ -10,7 +10,7 @@ namespace VoxTanks.UI
     public abstract class SelectionMenuItem : MonoBehaviour
     {
 
-        [SerializeField] BaseGameMode _playerSetup;
+        [SerializeField] GameMode _playerSetup;
 
         [SerializeField] Image _border;
 

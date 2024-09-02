@@ -7,64 +7,67 @@ namespace VoxTanks.Tank.Turrets
 {
     public abstract class TankTurret : NetworkBehaviour, ITankTurret
     {
-        public float AdditionalDamage 
-        { 
-            get => _additionalDamage; 
-            set 
-            {
-                if(value < 1)
-                    throw new ArgumentOutOfRangeException(nameof(value), "must be greater than 1");
-                _additionalDamage = value;
-            }
+        [field: SerializeField]
+        public Transform Mazzle { get; private set; }
+
+        public float AdditionalDamage
+        {
+            get => _additionalDamage;
+            set => _additionalDamage = MathF.Min(value, 1f);
         }
 
-        protected float Damage => _damage * _additionalDamage;
-        protected Crossghair Crosshair => _crossghair;
-        protected LayerMask LayerMask => _layermask;
-        protected float Distance => _distance;
+        protected float Damage => _baseDamage * _additionalDamage;
         protected TankSetup TankSetup { get; private set; }
+        protected Crosshair Crosshair { get; private set; }
+
+        private bool Reloaded => _currentTime >= _reloadTime;
 
         [Header("Settings")]
-        [SerializeField] private float _distance;
         [SerializeField] private TankSound _tankSound;
-        [SerializeField] private LayerMask _layermask;
         [SerializeField] private float _reloadTime;
-        [SerializeField] private float _damage;
+        [SerializeField] private float _baseDamage;
         [SerializeField] private int _soundIndex;
 
         private TurretAnimator _animator;
         private float _additionalDamage = 1;
         private float _currentTime;
-        private Crossghair _crossghair;
+        
         private IStatusBar _statusBar;
 
         private void Start()
         {
             if (!IsServer && !IsLocalPlayer)
                 enabled = false;
-        }
 
-        private void OnEnable()
-        {
-            _statusBar = FindObjectOfType<StatusBar>();
-            _crossghair = FindObjectOfType<Crossghair>();
             _animator = GetComponent<TurretAnimator>();
             TankSetup = GetComponentInParent<TankSetup>();
-        }
+
+            if (IsLocalPlayer)
+            {
+                Crosshair = FindObjectOfType<Crosshair>();
+                _statusBar = FindObjectOfType<StatusBar>();
+            }
+            AfterStart();
+        } 
+
+        protected virtual void AfterStart() {}
 
         private void Update()
         {
             if(!IsLocalPlayer)
                 return;
             
-            if (Input.GetButton("Fire1"))
+            if (Input.GetButton("Fire1") && Reloaded)
             {
-                var ray = Camera.main.ScreenPointToRay(Crosshair.Position);
+                Ray ray = GetRay();
                 FireServerRpc(ray);
+                _currentTime = 0;
             }
 
             _statusBar?.SetReloadProgress(_currentTime / _reloadTime);
         }
+
+        protected Ray GetRay() => Camera.main.ScreenPointToRay(Crosshair.Position);
 
         private void FixedUpdate()
         {
@@ -75,7 +78,7 @@ namespace VoxTanks.Tank.Turrets
         [ServerRpc]
         private void FireServerRpc(Ray ray)
         {
-            if (_currentTime >= _reloadTime)
+            if (Reloaded)
             {
                 if (_animator != null)
                     _animator.PlayShootAnimationClientRpc();

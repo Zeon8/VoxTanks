@@ -1,36 +1,32 @@
 using Unity.Netcode;
 using UnityEngine;
-using VoxTanks.Tank;
-using VoxTanks.Tank.Turrets;
-using VoxTanks.UI;
 
-namespace VoxTanks.Tank.Turrets {
+namespace VoxTanks.Tank.Turrets
+{
     public class SmokiTurret : TankTurret
     {
         [SerializeField] private GameObject _projectileEffect;
 
         protected override void Shoot(Ray ray)
         {
-            if (Physics.Raycast(ray, out RaycastHit hit) && !hit.collider.CompareTag("Player"))
+            if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                SpawnProjectile(hit.point);
-                HandleShot(hit);
+                SpawnProjectileClientRpc(hit.point);
+                HitTarget(hit);
             } 
         }
 
-        protected virtual void HandleShot(RaycastHit hit)
+        protected virtual void HitTarget(RaycastHit hit)
         {
             var health = hit.collider.GetComponentInParent<TankHealth>();
             if(health != null)
-                health.TakeDamage(Damage, TankSetup.Playername, TankSetup.Team);
+                health.TakeDamage(Damage, TankSetup.PlayerName, TankSetup.Team);
         }
 
-        protected virtual void SpawnProjectile(Vector3 position)
+        [ClientRpc]
+        private void SpawnProjectileClientRpc(Vector3 position)
         {
-            GameObject gm = Instantiate(_projectileEffect, position, Quaternion.identity);
-            gm.GetComponent<NetworkObject>().Spawn();
+            Instantiate(_projectileEffect, position, Quaternion.identity);
         }
-
-        
     }
 }

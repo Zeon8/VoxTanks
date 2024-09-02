@@ -4,7 +4,7 @@ using VoxTanks.UI.Supply;
 
 namespace VoxTanks.UI
 {
-    public class Crossghair : MonoBehaviour, ICrossghair
+    public class Crosshair : MonoBehaviour
     {
         private Image _image;
 
@@ -19,10 +19,14 @@ namespace VoxTanks.UI
         private void Start()
         {
             _image = GetComponent<Image>();
+            Visible = false;
         }
 
         public void UpdatePosition(Transform _muzzle)
         {
+            if (Camera.main == null)
+                return;
+
             bool hitted = Physics.Raycast(_muzzle.position, _muzzle.forward, out RaycastHit hit);
             Visible = hitted;
 

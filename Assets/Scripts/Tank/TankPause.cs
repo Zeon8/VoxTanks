@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using VoxTanks.Tank.Turrets;
 using VoxTanks.UI;
 
 namespace VoxTanks.Tank
@@ -14,45 +15,39 @@ namespace VoxTanks.Tank
 
         private PauseMenu _menu;
 
+        private void Start()
+        {
+            if (!IsLocalPlayer)
+            {
+                enabled = false;
+                return;
+            }
+
+            Cursor.lockState = CursorLockMode.Locked;
+            _menu = FindAnyObjectByType<PauseMenu>();
+            _menu.Resumed += PauseMenu_Resumed;
+            _components.Add(GetComponentInChildren<TankTurret>());
+        }
+
+        private void PauseMenu_Resumed() => SetPaused(false, showMenu: true);
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+                SetPaused(!Paused, showMenu: true);
+        }
         public void AddBehavour(Behaviour behaviour)
         {
             _components.Add(behaviour);
         }
 
-        private void Start()
-        {
-            if (IsLocalPlayer)
-            {
-                Cursor.lockState = CursorLockMode.Locked;
-                _menu = FindAnyObjectByType<PauseMenu>();
-                _menu.Resumed += PauseMenu_Resumed;
-            }
-        }
-
-        private void PauseMenu_Resumed() => SetPaused(false);
-
-        private void Update()
-        {
-            if (IsLocalPlayer && Input.GetKeyDown(KeyCode.Escape))
-            {
-                SetPaused(!Paused);
-            }
-        }
-
-        public void SetPaused(bool paused)
+        public void SetPaused(bool paused, bool showMenu)
         {
             Paused = paused;
             Cursor.lockState = Paused ? CursorLockMode.None : CursorLockMode.Locked;
             foreach (Behaviour component in _components)
-            {
                 component.enabled = !Paused;
-            }
-            _menu.SetActive(paused);
-        }
-
-        private void OnDisable()
-        {
-            _menu.Resumed -= PauseMenu_Resumed;
+            _menu.SetActive(paused && showMenu);
         }
     }
 }

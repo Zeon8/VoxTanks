@@ -10,12 +10,15 @@ namespace VoxTanks.UI
     {
         [SerializeField] private TMP_Text _text;
 
-        [Tooltip("Time stay on screen before disapear")]
+        [Multiline]
+        [SerializeField] private string _textTemplate;
+
+        [Tooltip("Time to stay on screen before disapear")]
         [SerializeField] private float _stayOnScreenTime;
 
         public void Setup(string attacker, string vicitim)
         {
-            _text.text = string.Format(_text.text,attacker,vicitim);
+            _text.text = string.Format(_textTemplate, attacker, vicitim);
             Destroy(gameObject, _stayOnScreenTime);
         }
 

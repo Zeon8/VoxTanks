@@ -1,11 +1,12 @@
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
+using VoxTanks.Tank.Turrets;
+using VoxTanks.UI;
 using VoxTanks.UI.SelectionMenu;
 
 namespace VoxTanks.Tank
 {
-
     public class TankSettingsApplier : NetworkBehaviour
     {
         [field: SerializeField]
@@ -14,36 +15,40 @@ namespace VoxTanks.Tank
         [SerializeField] private GameObject[] _turrets;
         [SerializeField] private GameObject[] _hulls;
 
+        [SerializeField] private Transform _turretParent;
+
         private NetworkVariable<TankSettings> _settings = new NetworkVariable<TankSettings>();
         private TankSettings? _settingsForRespawn;
+        private GameSetupMenu _menu;
 
-        public void Start()
+        private void Start()
         {
+            _settings.OnValueChanged = (_, settings) => Apply(settings);
+            _menu = FindObjectOfType<GameSetupModeToggler>().CurrentMenu;
+
             if (IsLocalPlayer)
             {
-                FindObjectOfType<GameSetupModeToggler>().CurrentMenu.Selected +=
-                    settings => ApplySettingsAfterRespawnServerRpc(settings);
+                _menu.Selected += settings => ApplyAfterRespawnServerRpc(settings);
+                SetSettingsServerRpc(_menu.Settings);
             }
+            else if (!IsServer)
+                Apply(_settings.Value);
 
-            if (IsClient)
-            {
-                _settings.OnValueChanged = (_, value) => ApplyTurretAndHull(value);
-                ApplyTurretAndHull(_settings.Value);
-            }
-            if(IsServer)
+            if (IsServer)
                 GetComponent<TankLife>().Respawned += TankSettingsApplier_Respawned;
         }
 
         [ServerRpc]
-        public void ApplySettingsServerRpc(TankSettings settings)
+        public void SetSettingsServerRpc(TankSettings settings) => _settings.Value = settings;
+
+        private void Apply(TankSettings settings)
         {
-            _settings.Value = settings;
-            OnSettingsChanged.Invoke(settings);
             ApplyTurretAndHull(settings);
+            OnSettingsChanged.Invoke(settings);
         }
 
         [ServerRpc]
-        public void ApplySettingsAfterRespawnServerRpc(TankSettings settings)
+        public void ApplyAfterRespawnServerRpc(TankSettings settings)
         {
             _settingsForRespawn = settings;
         }
@@ -52,7 +57,7 @@ namespace VoxTanks.Tank
         {
             if (_settingsForRespawn.HasValue)
             {
-                ApplySettingsServerRpc(_settingsForRespawn.Value);
+                _settings.Value = _settingsForRespawn.Value;
                 _settingsForRespawn = null;
             }
         }
@@ -63,11 +68,16 @@ namespace VoxTanks.Tank
             ApplyHull(settings.Hull);
         }
 
-        private void ApplyTurret(int selectedTurret) => SelectPart(_turrets, selectedTurret);
+        private void ApplyTurret(int selectedTurret)
+        {
+            SelectPart(_turrets, selectedTurret);
+        }
+
         private void ApplyHull(int selectedHull)
         {
             SelectPart(_hulls, selectedHull);
-            _hulls[selectedHull].GetComponent<TankHullSettings>().Apply();
+            if(IsServer)
+                _hulls[selectedHull].GetComponent<TankHullSettings>().Apply();
         }
 
         private void SelectPart(GameObject[] parts, int selectedPart)
@@ -75,12 +85,15 @@ namespace VoxTanks.Tank
             if (selectedPart > parts.Length)
                 return;
 
-            foreach (var part in parts)
-                part.SetActive(false);
-
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (i != selectedPart)
+                {
+                    GameObject part = parts[i];
+                    part.SetActive(false);
+                }
+            }
             parts[selectedPart].SetActive(true);
         }
-
-        
     }
 }

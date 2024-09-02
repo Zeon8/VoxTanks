@@ -1,5 +1,6 @@
 using Unity.Netcode;
 using UnityEngine;
+using VoxTanks.Tank.Turrets;
 
 namespace VoxTanks.Tank
 {
@@ -7,27 +8,38 @@ namespace VoxTanks.Tank
     {
         [SerializeField] private Transform _turret;
         [SerializeField] private int _rotationSpeed;
-        [SerializeField] private Transform _muzzle;
-        [SerializeField] private Vector3 crosshairOffset;
         [SerializeField] private TankCameraControl _cameraControlPrefab;
-
+        
+        private Transform _muzzle;
         private Transform _camera;
 
         private void Start()
         {
-            if (IsServer)
+            if (!IsLocalPlayer)
+                return;
+
+            var cameraControl = Instantiate(_cameraControlPrefab);
+            cameraControl.Setup(transform);
+            _camera = cameraControl.transform; 
+        }
+
+        public void ApplySettings(TankSettings settings)
+        {
+            if (IsServer || IsLocalPlayer)
             {
-                var cameraControl = Instantiate(_cameraControlPrefab);
-                cameraControl.Setup(transform);
-                _camera = cameraControl.transform; 
+                var turret = GetComponentInChildren<TankTurret>();
+                _muzzle = turret.Mazzle;
             }
         }
 
         private void FixedUpdate()
         {
+            if (_muzzle == null)
+                return;
+
             if (_camera.localRotation.normalized.y != _turret.localRotation.normalized.y)
             {
-                float cameraY =  _camera.eulerAngles.y - transform.eulerAngles.y;
+                float cameraY = _camera.eulerAngles.y - transform.eulerAngles.y;
                 RotateTurretServerRpc(cameraY);
             }
             if (_camera.rotation.normalized.x != _muzzle.rotation.normalized.x)
@@ -48,7 +60,6 @@ namespace VoxTanks.Tank
         [ServerRpc]
         private void RotateMuzzleServerRpc(float cameraX)
         {
-
             var muzzleRotation = _muzzle.eulerAngles;
 
             var cameraRotation = muzzleRotation;

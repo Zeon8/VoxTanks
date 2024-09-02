@@ -1,3 +1,4 @@
+using System;
 using Unity.Netcode;
 using UnityEngine;
 using VoxTanks.GameModes.FlagMode;
@@ -5,15 +6,28 @@ using VoxTanks.Tank;
 
 namespace VoxTanks.UI
 {
-    public class FlagMessagesUI : NetworkBehaviour
+    public class FlagMessagesUI : MonoBehaviour
     {
         [SerializeField] private FlagMessageItem _flagInfoPrefab;
         [SerializeField] private Transform _itemsContainer;
 
+        [Multiline]
         [SerializeField] private string _capturedFlagText;
+
+        [Multiline]
         [SerializeField] private string _returnedFlagText;
+
+        [Multiline]
         [SerializeField] private string _lostFlagText;
+
+        [Multiline]
         [SerializeField] private string _deliveredFlagText;
+
+        [Multiline]
+        [SerializeField] private string _redFlagText;
+
+        [Multiline]
+        [SerializeField] private string _blueFlagText;
 
         private FlagSound _flagSound;
 
@@ -22,39 +36,46 @@ namespace VoxTanks.UI
             _flagSound = FindObjectOfType<FlagSound>();
         }
 
-        [ClientRpc]
-        public void CreateFlagCapturedMessageClientRpc(string name, TankTeam taemFlag)
+        public void CreateFlagCapturedMessage(string playerName, TankTeam team)
         {
-            CreateMessage(_capturedFlagText, name, taemFlag);
+            CreateMessage(_capturedFlagText, playerName, team);
             _flagSound.PlayFlagCaptured();
         }
 
-        [ClientRpc]
-        public void CreateReturnedFlagMessageClientRpc(string name, TankTeam taemFlag)
+        public void CreateReturnedFlagMessage(string playerName, TankTeam team)
         {
-            CreateMessage(_returnedFlagText, name, taemFlag);
+            CreateMessage(_returnedFlagText, playerName, team);
             _flagSound.PlayFlagReturned();
         }
 
-        [ClientRpc]
-        public void CreateLostFlagMessageClientRpc(string name, TankTeam taemFlag)
+        public void CreateLostFlagMessage(string playerName, TankTeam team)
         {
-            CreateMessage(_lostFlagText, name, taemFlag);
+            CreateMessage(_lostFlagText, playerName, team);
             _flagSound.PlayFlagLost();
         }
 
-        [ClientRpc]
-        public void CreateDeliveredFlagMessageClientRpc(string name, TankTeam taemFlag)
+        public void CreateDeliveredFlagMessage(string playerName, TankTeam team)
         {
-            CreateMessage(_deliveredFlagText, name, taemFlag);
+            CreateMessage(_deliveredFlagText, playerName, team);
             _flagSound.PlayFlagDelivered();
         }
         
-        private void CreateMessage(string messageTemplate, string name, TankTeam taemFlag)
+        private void CreateMessage(string messageTemplate, string playerName, TankTeam team)
         {
-            var message = string.Format(messageTemplate, name, taemFlag.ToString());
-            var flagInfo = Instantiate(_flagInfoPrefab, _itemsContainer);
+            string flagText = GetFlagText(team);
+            string message = string.Format(messageTemplate, playerName, flagText);
+            FlagMessageItem flagInfo = Instantiate(_flagInfoPrefab, _itemsContainer);
             flagInfo.Setup(message);
+        }
+
+        private string GetFlagText(TankTeam team)
+        {
+            return team switch
+            {
+                TankTeam.Blue => _blueFlagText,
+                TankTeam.Red => _redFlagText,
+                _ => throw new ArgumentOutOfRangeException(nameof(team))
+            };
         }
     }
 }

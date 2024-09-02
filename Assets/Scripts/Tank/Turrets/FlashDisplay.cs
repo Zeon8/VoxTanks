@@ -7,10 +7,8 @@ namespace VoxTanks.Tank.Turrets
     {
         [SerializeField] private GameObject _shotEffect;
 
-        [ClientRpc]
-        public void ShowFlashClientRpc() => _shotEffect.SetActive(true);
+        public void Show() => _shotEffect.SetActive(true);
 
-        [ClientRpc]
-        public void HideClientRpc() => _shotEffect.SetActive(false);
+        public void Hide() => _shotEffect.SetActive(false);
     }
 }

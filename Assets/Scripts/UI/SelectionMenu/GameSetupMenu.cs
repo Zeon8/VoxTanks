@@ -10,6 +10,8 @@ namespace VoxTanks.UI
 {
     public class GameSetupMenu : MonoBehaviour
     {
+        public TankSettings Settings => _tankSettings;
+
         public event Action<TankSettings> Selected;
 
         [SerializeField] private Camera _mapCamera;
@@ -49,6 +51,7 @@ namespace VoxTanks.UI
         {
             _mapCamera.enabled = false;
             gameObject.SetActive(false);
+            _tankSettings.PlayerName = PlayerSettings.PlayerName;
             Selected?.Invoke(_tankSettings);
         }
     }

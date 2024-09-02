@@ -1,6 +1,7 @@
 using System;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Events;
 using VoxTanks.Game;
 using VoxTanks.Tank.Spawners;
 
@@ -13,24 +14,39 @@ namespace VoxTanks.Tank
         [SerializeField] private Behaviour[] controlComponents;
         [SerializeField] private GameObject[] tankParts;
         [SerializeField] private Rigidbody _rigidbody;
+        [SerializeField] private UnityEvent<bool> _visibilityChanged;
 
         private ITankRespawner _tankRespawner;
-        private TankTeam _tankTeam;
+        private TankSetup _setup;
+
+        private void Start()
+        {
+            _setup = GetComponent<TankSetup>();
+        }
 
         public void ApplySettings(TankSettings settings)
         {
-            _tankTeam = settings.Team;
-            _tankRespawner = FindAnyObjectByType<GameSetup>().CurrentGameMode.Respawner;
+            if (IsServer)
+            {
+                if(_tankRespawner == null)
+                    _tankRespawner = FindAnyObjectByType<GameSetup>().CurrentGameMode.Respawner;
+                _tankRespawner.RespawnTank(transform, settings.Team);
+            }
         }
 
         public void Respawn()
         {
-            _tankRespawner.RespawnTank(transform, _tankTeam);
+            _tankRespawner.RespawnTank(transform, _setup.Team);
             Respawned?.Invoke();
         }
 
-        [ClientRpc]
-        public void SetControllableClientRpc(bool value)
+        public void SetTankActive(bool value)
+        {
+            SetControllable(value);
+            SetVisible(value);
+        }
+
+        private void SetControllable(bool value)
         {
             if (!IsLocalPlayer)
                 return;
@@ -39,8 +55,8 @@ namespace VoxTanks.Tank
                 component.enabled = value;
         }
 
-        [ClientRpc]
-        public void SetVisibleClientRpc(bool value)
+        
+        private void SetVisible(bool value)
         {
             _rigidbody.isKinematic = !value;
             foreach (var part in tankParts)
@@ -48,6 +64,7 @@ namespace VoxTanks.Tank
                 if(part != null)
                     part.SetActive(value);
             }
+            _visibilityChanged.Invoke(value);
         }
 
         

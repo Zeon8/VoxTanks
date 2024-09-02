@@ -8,7 +8,7 @@ using VoxTanks.Tank.Spawners;
 namespace VoxTanks.GameModes
 {
     [CreateAssetMenu(menuName = "Game modes/Deathmatch")]
-    public class DeathmatchGameMode : BaseGameMode
+    public class DeathmatchGameMode : GameMode
     {
         public override ITankRespawner Respawner => FindObjectOfType<DefaultTankRespawner>();
 

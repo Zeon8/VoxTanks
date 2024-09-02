@@ -6,17 +6,14 @@ namespace VoxTanks.Tank
 {
     public class TankSetup : NetworkBehaviour
     {
-        public string Playername => _playerName.Value.Value.ToString();
-        public TankTeam Team => _team.Value;
+        public string PlayerName { get; private set; }
+
+        public TankTeam Team { get; private set; }
 
         [SerializeField] private Behaviour[] _behaviours;
         [SerializeField] private GameObject[] _removeObjects;
-        [SerializeField] private NetworkVariable<TankTeam> _team = new NetworkVariable<TankTeam>();
-        
 
-        private NetworkVariable<ForceNetworkSerializeByMemcpy<FixedString64Bytes>> _playerName = new NetworkVariable<ForceNetworkSerializeByMemcpy<FixedString64Bytes>>();
-
-        public void Start()
+        private void Start()
         {
             if (IsLocalPlayer)
             {
@@ -29,22 +26,16 @@ namespace VoxTanks.Tank
                 behaviour.enabled = false;
             }
 
-            foreach (GameObject robject in _removeObjects)
+            foreach (GameObject @object in _removeObjects)
             {
-                Destroy(robject);
+                Destroy(@object);
             }
-        }
-
-        [ContextMenu("Update List")]
-        private void AddToList()
-        {
-            _behaviours = GetComponents<NetworkBehaviour>();
         }
 
         public void ApplySettings(TankSettings settings)
         {
-            _playerName.Value = new ForceNetworkSerializeByMemcpy<FixedString64Bytes>(PlayerSettings.PlayerName);
-            _team.Value = settings.Team;
+            PlayerName = settings.PlayerName;
+            Team = settings.Team;
         }
     }
 }

@@ -7,13 +7,22 @@ namespace VoxTanks.Tank {
     {
         [SerializeField] private Transform _muzzle;
 
-        private Crossghair _crossghair;
+        private Crosshair _crossghair;
 
-        private void Start() => _crossghair = FindObjectOfType<Crossghair>();
+        private void Start()
+        {
+            if (!IsLocalPlayer)
+            {
+                enabled = false;
+                return;
+            }
+
+            _crossghair = FindObjectOfType<Crosshair>();
+        }
 
         private void Update()
         {
-            _crossghair?.UpdatePosition(_muzzle);
+            _crossghair.UpdatePosition(_muzzle);
         }
     }
 }

@@ -5,27 +5,19 @@ using UnityEngine;
 
 namespace VoxTanks.Effects
 {
-    public class AutoDestroy : NetworkBehaviour
+    public class AutoDestroy : MonoBehaviour
     {
-        public float Duration { get; private set; }
-
-        public event Action OnDestroyed;
-
-        [SerializeField] private float _waitTime;
+        [SerializeField] private float _destroyAfter;
 
         private void Start()
         {
-            if (!IsServer)
-                return;
             StartCoroutine(Destroy());
         }
 
         private IEnumerator Destroy()
         {
-            yield return new WaitForSeconds(_waitTime);
-            OnDestroyed?.Invoke();
-            NetworkObject.Despawn(true);
-
+            yield return new WaitForSeconds(_destroyAfter);
+            Destroy(gameObject);
         }
 
     }

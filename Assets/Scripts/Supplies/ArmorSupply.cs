@@ -6,26 +6,21 @@ namespace VoxTanks.Supplies
     [CreateAssetMenu(menuName="Supplies/Armor")]
     public class ArmorSupply : SupplyEffect
     {
+        public override SupplyEffectType EffectType => SupplyEffectType.Armor;
+
         [SerializeField] private float _armor = 1.5f;
 
         private TankHealth _tankHealth;
 
         public override void StartUsing(GameObject tank)
         {
-            base.StartUsing(tank);
             _tankHealth = tank.GetComponent<TankHealth>();
             _tankHealth.Armor = _armor;
         }
 
-        public override void Update()
-        {
-            TankUI.SetArmorProgressClientRpc(Duration / MaxDuration);
-        }
-
-        public override void FinishUsing()
+        public override void Stop()
         {
             _tankHealth.Armor = 1f;
-            TankUI.SetArmorProgressClientRpc(0);
         }
 
     }

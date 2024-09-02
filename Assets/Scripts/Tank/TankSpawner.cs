@@ -16,6 +16,9 @@ namespace VoxTanks.Game
 
         private void Start()
         {
+            if (!IsLocalPlayer)
+                return;
+
             if (SceneManager.GetActiveScene().name == _mainMenuScene)
                 NetworkManager.SceneManager.OnLoadComplete += SceneManager_OnLoadComplete;
             else 
@@ -38,17 +41,15 @@ namespace VoxTanks.Game
         private void OnPlayerReady(TankSettings tankSettings)
         {
             _menu.Selected -= OnPlayerReady;
-            SpawnTankServerRpc(NetworkManager.LocalClientId, tankSettings);
+            SpawnTankServerRpc(NetworkManager.LocalClientId);
         }
 
         [ServerRpc]
-        private void SpawnTankServerRpc(ulong localClientId, TankSettings tankSettings)
+        private void SpawnTankServerRpc(ulong localClientId)
         {
+            NetworkObject.Despawn(true);
             NetworkObject tank = Instantiate(_tank);
             tank.SpawnAsPlayerObject(localClientId);
-            tank.GetComponent<TankSettingsApplier>().ApplySettingsServerRpc(tankSettings);
-            tank.GetComponent<TankLife>().Respawn();
-            NetworkObject.Despawn(true);
         }
     }
 }

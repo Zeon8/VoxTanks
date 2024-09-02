@@ -13,18 +13,9 @@ namespace VoxTanks
         [SerializeField] private TankSound _tankSound;
 
         private TankHullSettings _hullSettings;
-        private Transform _transform;
-
-        public override void OnNetworkSpawn()
-        {
-            _transform = transform.root;
-        }
 
         private void FixedUpdate()
         {
-            if (!IsLocalPlayer || _hullSettings is null)
-                return;
-
             float vertical = Input.GetAxis("Vertical");
             float horizontal = Input.GetAxis("Horizontal");
             MoveServerRpc(vertical, horizontal);
@@ -53,19 +44,18 @@ namespace VoxTanks
                 wheel.brakeTorque = brakeTorque;
             }
 
-            _transform.Rotate(0, horizontal * _hullSettings.RotationSpeed, 0);
+            transform.Rotate(0, horizontal * _hullSettings.RotationSpeed, 0);
         }
 
-        public void SetSettings(TankHullSettings settings)
-        {
-            _hullSettings = settings;
-        }
+        public void SetSettings(TankHullSettings settings) => _hullSettings = settings;
+
+        private void StopMovement() => MoveServerRpc(0, 0);
 
         private void OnDisable()
         {
-            StopMovement();
+            if(IsLocalPlayer)
+                StopMovement();
         }
 
-        private void StopMovement() => MoveServerRpc(0, 0);
     }
 }

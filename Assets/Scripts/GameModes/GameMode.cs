@@ -9,7 +9,7 @@ using VoxTanks.Tank.Spawners;
 
 namespace VoxTanks.GameModes
 {
-    public abstract class BaseGameMode : ScriptableObject
+    public abstract class GameMode : ScriptableObject
     {
         public abstract ITankRespawner Respawner { get; }
 

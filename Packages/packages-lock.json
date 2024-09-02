@@ -7,14 +7,7 @@
       "dependencies": {
         "com.unity.netcode.gameobjects": "1.0.2"
       },
-      "hash": "8eab2c9713f7cbb056200e7eba6d4b4b5a19fe7f"
-    },
-    "com.community.netcode.transport.photon-realtime": {
-      "version": "https://github.com/Unity-Technologies/multiplayer-community-contributions.git?path=/Transports/com.community.netcode.transport.photon-realtime",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "8eab2c9713f7cbb056200e7eba6d4b4b5a19fe7f"
+      "hash": "0eda04fc2146a4f907a61de6403315bce705279e"
     },
     "com.unity.ai.navigation": {
       "version": "1.1.5",

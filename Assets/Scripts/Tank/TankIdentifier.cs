@@ -13,36 +13,39 @@ namespace VoxTanks.Tank
         [SerializeField] private Color _redTeamColor;
         [SerializeField] private Color _noneTeamColor;
 
-        private TankSetup _tankSetup;
-
         private void Start()
         {
-            _tankSetup = GetComponent<TankSetup>();
+            _canvas.SetActive(!IsLocalPlayer);
         }
 
         public void ApplySettings(TankSettings settings)
         {
-            _canvas.SetActive(!IsLocalPlayer);
             if (!IsLocalPlayer)
-                Setup();
+                Setup(settings);
         }
 
-        private void Setup()
+        private void Update()
         {
-            _text.text = _tankSetup.Playername;
+            if(!IsLocalPlayer && Camera.main != null)
+                _canvas.transform.LookAt(Camera.main.transform);
+        }
 
-            Color color = _noneTeamColor;
-            switch (_tankSetup.Team)
+        private void Setup(TankSettings settings)
+        {
+            _text.text = settings.PlayerName;
+            var color = settings.Team switch
             {
-                case TankTeam.Red:
-                    color = _redTeamColor;
-                    break;
-                case TankTeam.Blue:
-                    color = _blueTeamColor;
-                    break;
-            }
-
+                TankTeam.Red => _redTeamColor,
+                TankTeam.Blue => _blueTeamColor,
+                _ => _noneTeamColor,
+            };
             _text.color = color;
+        }
+
+        public void SetVisible(bool value)
+        {
+            if(!IsLocalPlayer)
+                _canvas.SetActive(value);
         }
     }
 }

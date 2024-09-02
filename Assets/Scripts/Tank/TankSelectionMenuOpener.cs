@@ -14,9 +14,15 @@ namespace Assets.Scripts.Tank
 
         void Start()
         {
+            if (!IsLocalPlayer)
+                return;
+
             _tankPause = GetComponent<TankPause>();
             _toggler = FindObjectOfType<GameSetupModeToggler>();
+            _toggler.CurrentMenu.Selected += CurrentMenu_Selected;
         }
+
+        private void CurrentMenu_Selected(TankSettings obj) => ToggleMenu(false);
 
         void Update()
         {
@@ -24,6 +30,7 @@ namespace Assets.Scripts.Tank
             {
                 ToggleMenu(!_menuOpened);
             }
+
             if (_menuOpened && Input.GetKeyDown(KeyCode.Escape))
             {
                 ToggleMenu(false);
@@ -34,7 +41,7 @@ namespace Assets.Scripts.Tank
         {
             _menuOpened = opened;
             _toggler.SetVisible(opened);
-            _tankPause.SetPaused(opened);
+            _tankPause.SetPaused(opened, showMenu: false);
         }
     }
 }

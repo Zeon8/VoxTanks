@@ -15,7 +15,7 @@ namespace VoxTanks.UI.SelectionMenu
 
         private GameSetupMenu DetermineCurrentMenu()
         {
-            if (_gameSetup.CurrentGameMode is BaseTeamsGameMode)
+            if (_gameSetup.CurrentGameMode is TeamGameMode)
                 return _teamsModeMenu;
             else
                 return _defaultMenu;
