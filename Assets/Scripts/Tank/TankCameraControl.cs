@@ -14,6 +14,9 @@ namespace VoxTanks.Tank
         [SerializeField] private float _sensivityY;
         [SerializeField] private float _followSpeed;
 
+        [SerializeField] private float _minYAngle;
+        [SerializeField] private float _maxYAngle;
+
         private Transform _tankTransform;
         private TankPause _tankPause;
         private Vector3 _rotation = Vector3.zero;
@@ -68,7 +71,7 @@ namespace VoxTanks.Tank
             {
                 angle -= 360;
             }
-            return Mathf.Clamp(angle, -30, 60);
+            return Mathf.Clamp(angle, _minYAngle, _maxYAngle);
         }
 
         private void FollowTank()

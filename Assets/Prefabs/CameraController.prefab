@@ -86,6 +86,8 @@ MonoBehaviour:
   _sensivityX: 2
   _sensivityY: 2
   _followSpeed: 0.5
+  _minYAngle: -10
+  _maxYAngle: 90
 --- !u!1 &3419657304244902296
 GameObject:
   m_ObjectHideFlags: 0

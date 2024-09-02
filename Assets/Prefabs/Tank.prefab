@@ -1913,8 +1913,8 @@ MonoBehaviour:
   _muzzle: {fileID: 4280398940946765926}
   _layerMask:
     serializedVersion: 2
-    m_Bits: 0
-  _distance: 100
+    m_Bits: 4294967295
+  _distance: 1000
 --- !u!114 &985888382262708308
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3686,7 +3686,7 @@ Transform:
   m_GameObject: {fileID: 7550701826651872173}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
-  m_LocalPosition: {x: 0, y: 0.4, z: 0}
+  m_LocalPosition: {x: 0, y: 0.3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4975,7 +4975,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 44e4979a3d7be3e49b5cd324d58b5cee, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1163987720134332221, guid: 44e4979a3d7be3e49b5cd324d58b5cee, type: 3}
       propertyPath: m_Layer
