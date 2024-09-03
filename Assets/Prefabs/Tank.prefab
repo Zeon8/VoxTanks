@@ -450,7 +450,7 @@ MonoBehaviour:
   <Mazzle>k__BackingField: {fileID: 7516673770930230959}
   _tankSound: {fileID: 8367215145153893535}
   _reloadTime: 0.3
-  _baseDamage: 5
+  _baseDamage: 10
   _soundIndex: 2
   _projectile: {fileID: -232029463999579004, guid: e96069db02a17fe45b7bea30c7725b0f, type: 3}
   _leftMuzzle: {fileID: 3567055979810753645}
@@ -4804,10 +4804,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <Mazzle>k__BackingField: {fileID: 4252287182550440415}
   _tankSound: {fileID: 8367215145153893535}
-  _reloadTime: 2
-  _baseDamage: 10
+  _reloadTime: 4
+  _baseDamage: 30
   _soundIndex: 0
   _projectileEffect: {fileID: 180128, guid: b64883caf1b73924b825b2643e7fc02a, type: 3}
+  _lowChanceDamage: 0
 --- !u!114 &2083131459909830536
 MonoBehaviour:
   m_ObjectHideFlags: 0

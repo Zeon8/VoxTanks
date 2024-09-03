@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace VoxTanks.Tank.Turrets
 {
-    public class ThunderTurret : SmokiTurret
+    public class ThunderTurret : ProjectileTurret
     {
         [SerializeField] private float _radius;
 
@@ -16,7 +16,7 @@ namespace VoxTanks.Tank.Turrets
             foreach (Collider collider in _colliders)
             {
                 if (collider == null)
-                    break;
+                    continue;
 
                 Debug.DrawLine(hit.point, collider.transform.position);
                 if (collider.transform.root != transform.root)

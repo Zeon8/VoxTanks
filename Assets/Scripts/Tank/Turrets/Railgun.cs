@@ -59,7 +59,7 @@ namespace VoxTanks.Tank.Turrets
             foreach (RaycastHit target in _hits)
             {
                 if (target.collider == null)
-                    break;
+                    continue;
 
                 var tankHealth = target.collider.GetComponentInParent<TankHealth>();
                 if (tankHealth != null)

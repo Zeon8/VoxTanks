@@ -20,7 +20,7 @@ namespace VoxTanks.Tank.Turrets
         protected TankSetup TankSetup { get; private set; }
         protected Crosshair Crosshair { get; private set; }
 
-        private bool Reloaded => _currentTime >= _reloadTime;
+        private bool Reloaded => _currentTime.Value >= _reloadTime;
 
         [Header("Settings")]
         [SerializeField] private TankSound _tankSound;
@@ -30,7 +30,8 @@ namespace VoxTanks.Tank.Turrets
 
         private TurretAnimator _animator;
         private float _additionalDamage = 1;
-        private float _currentTime;
+        private NetworkVariable<float> _currentTime = new();
+        //private float _currentTime;
         
         private IStatusBar _statusBar;
 
@@ -47,6 +48,8 @@ namespace VoxTanks.Tank.Turrets
                 Crosshair = FindObjectOfType<Crosshair>();
                 _statusBar = FindObjectOfType<StatusBar>();
             }
+
+            _currentTime.OnValueChanged += (old, current) => _statusBar?.SetReloadProgress(current / _reloadTime);
             AfterStart();
         } 
 
@@ -61,32 +64,29 @@ namespace VoxTanks.Tank.Turrets
             {
                 Ray ray = GetRay();
                 FireServerRpc(ray);
-                _currentTime = 0;
             }
-
-            _statusBar?.SetReloadProgress(_currentTime / _reloadTime);
         }
 
         protected Ray GetRay() => Camera.main.ScreenPointToRay(Crosshair.Position);
 
         private void FixedUpdate()
         {
-            if (_currentTime < _reloadTime)
-                _currentTime += Time.fixedDeltaTime;
+            if (_currentTime.Value < _reloadTime && IsServer)
+                _currentTime.Value += Time.fixedDeltaTime;
         }
 
         [ServerRpc]
         private void FireServerRpc(Ray ray)
         {
-            if (Reloaded)
-            {
-                if (_animator != null)
-                    _animator.PlayShootAnimationClientRpc();
+            if (!Reloaded)
+                return;
 
-                _tankSound.PlayShotClientRpc(_soundIndex);
-                _currentTime = 0;
-                Shoot(ray);
-            }
+            if (_animator != null)
+                _animator.PlayShootAnimationClientRpc();
+
+            _tankSound.PlayShotClientRpc(_soundIndex);
+            _currentTime.Value = 0;
+            Shoot(ray);
         }
 
         protected abstract void Shoot(Ray ray);
